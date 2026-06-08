@@ -5,7 +5,8 @@ import {
   Layout, Layers, ExternalLink, Activity, Send, Award, Calendar, 
   CheckCircle, Coffee, Compass, Shield, User, Globe, ChevronRight, Menu, X, 
   Play, RefreshCw, Layers3, Monitor, Zap, Sparkles, GraduationCap, Laptop,
-  Star, Heart, ArrowRight, HelpCircle, ChevronDown, Check, AlertCircle
+  Star, Heart, ArrowRight, HelpCircle, ChevronDown, Check, AlertCircle,
+  Plus, Trash, Key, Lock, Unlock, Settings, FolderPlus, MessageSquare, LogOut, ArrowLeft
 } from 'lucide-react'
 
 // --- FORM INTEGRATION CONFIGURATION ---
@@ -214,6 +215,7 @@ public function registerStudentMarks(Request $request, Exam $exam)
     metric: "Scales to 10k+ daily transactions/tenant",
     role: "Lead Systems Architect & Multi-Tenant Lead",
     github: "https://github.com/kjaydeep842/omnipos",
+    live: "https://omnipos-demo.vercel.app",
     snippet: `// Tenant isolation scope in Laravel Eloquent model
 public function scopeTenant($query)
 {
@@ -439,14 +441,14 @@ const timeline = [
     year: "2023 - Present",
     role: "Full-Stack Developer & Freelancer",
     company: "Client Sites & Custom ERPs",
-    icon: Laptop,
+    iconType: "Laptop",
     desc: "Architecting customized B2C/B2B products (OmniPOS, AosAi, and The Commerce Institute). Implementing responsive frontends in React and scaling secure APIs using Laravel frameworks."
   },
   {
     year: "2020 - 2023",
     role: "BCA Graduate (Bachelor of Computer Applications)",
     company: "Som-Lalit Institute, Ahmedabad",
-    icon: GraduationCap,
+    iconType: "GraduationCap",
     desc: "Graduated with comprehensive training in Object-Oriented Programming (OOP), web designing, SQL query optimization, database security configurations, and MVC paradigms."
   }
 ];
@@ -498,6 +500,82 @@ const faqs = [
     a: "I focus on tracking layout shifts, profiling memory leaks, migrating legacy databases to structured SQL with indexes, and decoupling bulky routines into scalable async jobs."
   }
 ];
+
+// Interactive FAQ Accordion component with rotating arrows & smooth height transitions
+const FAQSection = () => {
+  const [openIdx, setOpenIdx] = useState(null);
+  
+  return (
+    <div className="space-y-4 max-w-4xl mx-auto">
+      {faqs.map((faq, idx) => {
+        const isOpen = openIdx === idx;
+        return (
+          <div key={idx} className="border border-slate-200 bg-white rounded-xl overflow-hidden shadow-sm transition-all duration-300">
+            <button
+              onClick={() => setOpenIdx(isOpen ? null : idx)}
+              className="w-full text-left px-6 py-4 flex justify-between items-center hover:bg-slate-50 transition-colors font-semibold cursor-pointer"
+            >
+              <span className="text-slate-800 text-sm sm:text-base font-display">{faq.q}</span>
+              <motion.span
+                animate={{ rotate: isOpen ? 180 : 0 }}
+                transition={{ type: "spring", stiffness: 200, damping: 15 }}
+                className="text-slate-400"
+              >
+                <ChevronDown size={18} />
+              </motion.span>
+            </button>
+            <AnimatePresence initial={false}>
+              {isOpen && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.25, ease: "easeInOut" }}
+                  className="overflow-hidden"
+                >
+                  <div className="px-6 pb-5 pt-1 text-slate-500 text-xs sm:text-sm border-t border-slate-100/60 font-sans leading-relaxed">
+                    {faq.a}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+// GPU-Accelerated floating particles background component
+const FloatingParticles = () => {
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-30 z-0">
+      {[...Array(12)].map((_, i) => (
+        <motion.div
+          key={i}
+          className="absolute rounded-full bg-emerald-500/10"
+          style={{
+            width: Math.random() * 25 + 8,
+            height: Math.random() * 25 + 8,
+            left: `${Math.random() * 100}%`,
+            top: `${Math.random() * 100}%`,
+          }}
+          animate={{
+            y: [0, Math.random() * -50 - 20, 0],
+            x: [0, Math.random() * 30 - 15, 0],
+            scale: [1, 1.15, 1],
+            opacity: [0.1, 0.35, 0.1]
+          }}
+          transition={{
+            duration: Math.random() * 8 + 8,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        />
+      ))}
+    </div>
+  );
+};
 
 // Interactive Terminal Help Commands
 const terminalCommands = {
@@ -663,84 +741,53 @@ const Marquee = () => {
   );
 };
 
-// FAQ Accordion component with rotating arrows & smooth height transitions
-const FAQSection = () => {
-  const [openIdx, setOpenIdx] = useState(null);
-  
-  return (
-    <div className="space-y-4 max-w-4xl mx-auto">
-      {faqs.map((faq, idx) => {
-        const isOpen = openIdx === idx;
-        return (
-          <div key={idx} className="border border-slate-200 bg-white rounded-xl overflow-hidden shadow-sm transition-all duration-300">
-            <button
-              onClick={() => setOpenIdx(isOpen ? null : idx)}
-              className="w-full text-left px-6 py-4 flex justify-between items-center hover:bg-slate-50 transition-colors font-semibold cursor-pointer"
-            >
-              <span className="text-slate-800 text-sm sm:text-base font-display">{faq.q}</span>
-              <motion.span
-                animate={{ rotate: isOpen ? 180 : 0 }}
-                transition={{ type: "spring", stiffness: 200, damping: 15 }}
-                className="text-slate-400"
-              >
-                <ChevronDown size={18} />
-              </motion.span>
-            </button>
-            <AnimatePresence initial={false}>
-              {isOpen && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.25, ease: "easeInOut" }}
-                  className="overflow-hidden"
-                >
-                  <div className="px-6 pb-5 pt-1 text-slate-500 text-xs sm:text-sm border-t border-slate-100/60 font-sans leading-relaxed">
-                    {faq.a}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        );
-      })}
-    </div>
-  );
-};
-
-// GPU-Accelerated floating particles background component
-const FloatingParticles = () => {
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-30 z-0">
-      {[...Array(12)].map((_, i) => (
-        <motion.div
-          key={i}
-          className="absolute rounded-full bg-emerald-500/10"
-          style={{
-            width: Math.random() * 25 + 8,
-            height: Math.random() * 25 + 8,
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-          }}
-          animate={{
-            y: [0, Math.random() * -50 - 20, 0],
-            x: [0, Math.random() * 30 - 15, 0],
-            scale: [1, 1.15, 1],
-            opacity: [0.1, 0.35, 0.1]
-          }}
-          transition={{
-            duration: Math.random() * 8 + 8,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-        />
-      ))}
-    </div>
-  );
-};
-
 export default function App() {
-  const [selectedProject, setSelectedProject] = useState(projects[0]);
+  // PERSISTED DATA STATES FOR ADMIN MANAGEMENT
+  const [allProjects, setAllProjects] = useState(() => {
+    const saved = localStorage.getItem('portfolio_projects');
+    return saved ? JSON.parse(saved) : projects;
+  });
+
+  const [allTimeline, setAllTimeline] = useState(() => {
+    const saved = localStorage.getItem('portfolio_timeline');
+    return saved ? JSON.parse(saved) : timeline;
+  });
+
+  const [allTestimonials, setAllTestimonials] = useState(() => {
+    const saved = localStorage.getItem('portfolio_testimonials');
+    return saved ? JSON.parse(saved) : testimonials;
+  });
+
+  const [allInquiries, setAllInquiries] = useState(() => {
+    const saved = localStorage.getItem('portfolio_inquiries');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const [selectedProject, setSelectedProject] = useState(() => {
+    const saved = localStorage.getItem('portfolio_projects');
+    const projs = saved ? JSON.parse(saved) : projects;
+    return projs[0] || null;
+  });
+
+  // NAVIGATION & ROUTING VIEWS
+  const [currentView, setCurrentView] = useState("portfolio"); // "portfolio", "admin", "project-detail"
+  const [detailProjectId, setDetailProjectId] = useState("");
+  const [adminPassword, setAdminPassword] = useState("");
+  const [adminLoggedIn, setAdminLoggedIn] = useState(false);
+  const [adminTab, setAdminTab] = useState("projects"); // "projects", "timeline", "testimonials", "inquiries"
+  const [loginError, setLoginError] = useState("");
+
+  // Form states for Admin Adding Items
+  const [newProj, setNewProj] = useState({
+    id: "", title: "", subtitle: "", tech: "", desc: "", metric: "", role: "", github: "", live: "", snippet: "", client: "", api: "", jobs: "", db: ""
+  });
+  const [newTime, setNewTime] = useState({
+    year: "", role: "", company: "", iconType: "Laptop", desc: ""
+  });
+  const [newTestimonial, setNewTestimonial] = useState({
+    name: "", org: "", text: "", stars: 5
+  });
+
   const [terminalInput, setTerminalInput] = useState("");
   const [terminalHistory, setTerminalHistory] = useState([
     { type: 'input', text: 'help' },
@@ -766,7 +813,7 @@ export default function App() {
   
   const terminalBottomRef = useRef(null);
 
-  // Monitor scroll for header transistion, scroll progress bar, and active nav section
+  // Monitor scroll for header background, progress bar, and active nav section
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
@@ -793,6 +840,55 @@ export default function App() {
     
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // Hash-based subpage routing listener
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      if (hash === "#admin") {
+        setCurrentView("admin");
+        window.scrollTo(0, 0);
+      } else if (hash.startsWith("#project-")) {
+        const id = hash.replace("#project-", "");
+        setDetailProjectId(id);
+        setCurrentView("project-detail");
+        window.scrollTo(0, 0);
+      } else {
+        setCurrentView("portfolio");
+        if (hash) {
+          const id = hash.substring(1);
+          setTimeout(() => {
+            const el = document.getElementById(id);
+            if (el) {
+              el.scrollIntoView({ behavior: 'smooth' });
+            }
+          }, 100);
+        }
+      }
+    };
+    
+    window.addEventListener("hashchange", handleHashChange);
+    handleHashChange();
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, []);
+
+  // Load-time scroll jump corrector
+  useEffect(() => {
+    if (window.location.hash && window.location.hash !== "#admin" && !window.location.hash.startsWith("#project-")) {
+      const targetHash = window.location.hash;
+      history.replaceState(null, null, ' ');
+      
+      const timer = setTimeout(() => {
+        history.replaceState(null, null, targetHash);
+        const id = targetHash.substring(1);
+        const el = document.getElementById(id);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 400);
+      return () => clearTimeout(timer);
+    }
   }, []);
 
   // Terminal scroll to bottom
@@ -833,7 +929,7 @@ export default function App() {
       newHistory.push({ type: 'output', text: terminalCommands[cmd] });
     } else if (cmd.startsWith("project ")) {
       const pId = cmd.replace("project ", "").trim();
-      const proj = projects.find(p => p.id === pId);
+      const proj = allProjects.find(p => p.id === pId);
       if (proj) {
         newHistory.push({ 
           type: 'output', 
@@ -860,7 +956,7 @@ export default function App() {
     setTimeout(() => setCopiedCode(false), 2000);
   };
 
-  // Encrypted transmission simulation
+  // Encrypted transmission + Local CRM submission
   const handleContactSubmit = async (e) => {
     e.preventDefault();
     if (!contactState.name || !contactState.email || !contactState.message) return;
@@ -901,6 +997,18 @@ export default function App() {
       }
     }
 
+    // Save Inquiry to local state and storage
+    const newInquiry = {
+      id: Date.now(),
+      name: contactState.name,
+      email: contactState.email,
+      message: contactState.message,
+      date: new Date().toLocaleString()
+    };
+    const updatedInquiries = [...allInquiries, newInquiry];
+    setAllInquiries(updatedInquiries);
+    localStorage.setItem('portfolio_inquiries', JSON.stringify(updatedInquiries));
+
     logs.push("VERIFYING INTEGRITY CHECK (HMAC-SHA256)...");
     logs.push("TRANSMISSION COMPLETED SUCCESSFULLY.");
 
@@ -918,11 +1026,474 @@ export default function App() {
     }, 8000);
   };
 
+  // ADMIN SUBMIT HANDLERS
+  const handleAdminLogin = (e) => {
+    e.preventDefault();
+    if (adminPassword === "admin") {
+      setAdminLoggedIn(true);
+      setLoginError("");
+    } else {
+      setLoginError("Access key denied. Secure handshake failed.");
+    }
+  };
+
+  const handleAddProject = (e) => {
+    e.preventDefault();
+    if (!newProj.id || !newProj.title) return;
+    
+    const formattedProj = {
+      ...newProj,
+      tech: newProj.tech.split(",").map(t => t.trim()),
+      architecture: {
+        client: newProj.client || "Web Client",
+        api: newProj.api || "REST Gateway",
+        jobs: newProj.jobs || "Sync Workers",
+        db: newProj.db || "Database"
+      }
+    };
+    const updated = [formattedProj, ...allProjects];
+    setAllProjects(updated);
+    localStorage.setItem('portfolio_projects', JSON.stringify(updated));
+    setNewProj({
+      id: "", title: "", subtitle: "", tech: "", desc: "", metric: "", role: "", github: "", live: "", snippet: "", client: "", api: "", jobs: "", db: ""
+    });
+  };
+
+  const handleAddTimeline = (e) => {
+    e.preventDefault();
+    if (!newTime.year || !newTime.role) return;
+
+    const formattedTime = {
+      ...newTime,
+      icon: newTime.iconType === "Laptop" ? Laptop : GraduationCap
+    };
+    const updated = [formattedTime, ...allTimeline];
+    setAllTimeline(updated);
+    localStorage.setItem('portfolio_timeline', JSON.stringify(updated));
+    setNewTime({ year: "", role: "", company: "", iconType: "Laptop", desc: "" });
+  };
+
+  const handleAddTestimonial = (e) => {
+    e.preventDefault();
+    if (!newTestimonial.name || !newTestimonial.text) return;
+
+    const updated = [newTestimonial, ...allTestimonials];
+    setAllTestimonials(updated);
+    localStorage.setItem('portfolio_testimonials', JSON.stringify(updated));
+    setNewTestimonial({ name: "", org: "", text: "", stars: 5 });
+  };
+
+  const handleDeleteProject = (id) => {
+    const updated = allProjects.filter(p => p.id !== id);
+    setAllProjects(updated);
+    localStorage.setItem('portfolio_projects', JSON.stringify(updated));
+    if (selectedProject.id === id) {
+      setSelectedProject(updated[0] || null);
+    }
+  };
+
+  const handleDeleteTimeline = (idx) => {
+    const updated = allTimeline.filter((_, i) => i !== idx);
+    setAllTimeline(updated);
+    localStorage.setItem('portfolio_timeline', JSON.stringify(updated));
+  };
+
+  const handleDeleteTestimonial = (idx) => {
+    const updated = allTestimonials.filter((_, i) => i !== idx);
+    setAllTestimonials(updated);
+    localStorage.setItem('portfolio_testimonials', JSON.stringify(updated));
+  };
+
+  const handleClearInquiries = () => {
+    setAllInquiries([]);
+    localStorage.setItem('portfolio_inquiries', JSON.stringify([]));
+  };
+
+  const getTimelineIcon = (item) => {
+    if (item.iconType === "GraduationCap" || item.role?.toLowerCase().includes("bca") || item.role?.toLowerCase().includes("student")) {
+      return GraduationCap;
+    }
+    return Laptop;
+  };
+
   const titleWords = "Designing Resilient Systems".split(" ");
   const subtitleWords = "With Performance Architecture".split(" ");
 
+  // RENDER DEDICATED FULL-SCREEN PROJECT DETAIL VIEW
+  if (currentView === "project-detail") {
+    const proj = allProjects.find(p => p.id === detailProjectId) || selectedProject;
+    
+    return (
+      <div className="min-h-screen bg-[#f8fafc] relative overflow-hidden font-sans text-slate-700 pb-16 aurora-bg">
+        <div className="absolute top-0 left-0 w-full h-full bg-grid-pattern pointer-events-none z-0" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-12 py-12 relative z-10 space-y-8">
+          
+          <div className="flex items-center justify-between border-b border-slate-200 pb-6">
+            <a href="#" className="inline-flex items-center gap-2 text-sm font-mono font-bold text-emerald-600 hover:text-emerald-700">
+              <ArrowLeft size={16} /> Back to Portfolio
+            </a>
+            <div className="flex items-center gap-2">
+              <a href={proj.github} target="_blank" rel="noopener noreferrer" className="px-3 py-2 rounded-lg border border-slate-200 hover:bg-slate-100 text-xs font-mono font-semibold flex items-center gap-1.5 transition-all">
+                <Github size={14} /> Repository
+              </a>
+              {proj.live && (
+                <a href={proj.live} target="_blank" rel="noopener noreferrer" className="px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-mono font-semibold flex items-center gap-1.5 transition-all shadow-md">
+                  <ExternalLink size={14} /> Launch Live Demo
+                </a>
+              )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            <div className="lg:col-span-7 space-y-6">
+              <div>
+                <span className="text-xs font-mono bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 px-3 py-1 rounded-full font-bold">
+                  PROJECT REPORT
+                </span>
+                <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold font-display text-slate-900 mt-4 tracking-tight">
+                  {proj.title}
+                </h1>
+                <p className="text-sm font-mono text-slate-500 mt-2">{proj.subtitle}</p>
+              </div>
+
+              <div className="glass-panel p-6 rounded-2xl border border-slate-200 bg-white space-y-4">
+                <h3 className="text-base font-bold font-display text-slate-900 uppercase tracking-wide">Core Architecture Overview</h3>
+                <p className="text-sm text-slate-600 leading-relaxed font-sans">{proj.desc}</p>
+              </div>
+
+              <div className="glass-panel p-6 rounded-2xl border border-slate-200 bg-white space-y-4">
+                <h3 className="text-base font-bold font-display text-slate-900 uppercase tracking-wide">Role & Systems Integration</h3>
+                <p className="text-sm text-slate-600 leading-relaxed font-sans">
+                  <strong>Responsibility:</strong> {proj.role}<br />
+                  <strong>Telemetry Metric:</strong> {proj.metric}
+                </p>
+              </div>
+
+              <div className="glass-panel p-6 rounded-2xl border border-slate-200 bg-white space-y-4">
+                <h3 className="text-base font-bold font-display text-slate-900 uppercase tracking-wide">Technology Stack Matrix</h3>
+                <div className="flex flex-wrap gap-2">
+                  {proj.tech.map((t, idx) => (
+                    <span key={idx} className="text-xs font-mono bg-slate-100 text-emerald-800 px-3 py-1 rounded-full border border-slate-200/60 font-semibold">
+                      {t}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="lg:col-span-5 space-y-6">
+              <div className="h-[240px] border border-slate-200 rounded-2xl overflow-hidden shadow-inner bg-slate-950 relative">
+                <ProjectMockup projectId={proj.id} />
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/60 font-mono text-xs">
+                <h4 className="text-[10px] text-slate-400 uppercase tracking-widest mb-3 font-bold">Architecture Schema</h4>
+                <div className="space-y-2">
+                  <div className="flex justify-between border-b border-slate-200 pb-1.5">
+                    <span className="text-slate-500">Client:</span>
+                    <span className="text-slate-800 font-semibold">{proj.architecture.client}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-slate-200 pb-1.5">
+                    <span className="text-slate-500">Routing API:</span>
+                    <span className="text-slate-800 font-semibold">{proj.architecture.api}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-slate-200 pb-1.5">
+                    <span className="text-slate-500">Worker Jobs:</span>
+                    <span className="text-slate-800 font-semibold">{proj.architecture.jobs}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Data Store:</span>
+                    <span className="text-slate-800 font-semibold">{proj.architecture.db}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <h4 className="text-[10px] font-mono text-slate-500 uppercase tracking-widest font-bold">Source Implementation Snippet</h4>
+                  <button 
+                    onClick={() => handleCopyCode(proj.snippet)}
+                    className="text-[10px] font-mono text-emerald-600 hover:text-emerald-700 transition-colors flex items-center gap-1 cursor-pointer p-1 font-bold"
+                  >
+                    {copiedCode ? <CheckCircle size={10} /> : <Code size={10} />}
+                    {copiedCode ? "Copied" : "Copy"}
+                  </button>
+                </div>
+                <div className="relative rounded-xl overflow-hidden bg-slate-900 border border-slate-200 max-h-[200px] overflow-y-auto">
+                  <pre className="p-4 font-mono text-[11px] text-emerald-400 leading-relaxed overflow-x-auto whitespace-pre">
+                    <code>{proj.snippet}</code>
+                  </pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // RENDER PORTFOLIO ADMIN COMMAND DASHBOARD
+  if (currentView === "admin") {
+    return (
+      <div className="min-h-screen bg-[#070b14] relative overflow-hidden font-sans text-slate-300 pb-16">
+        <div className="absolute top-0 left-0 w-full h-full bg-grid-pattern opacity-10 pointer-events-none z-0" />
+        
+        {!adminLoggedIn ? (
+          <div className="min-h-screen flex items-center justify-center p-4 relative z-10">
+            <InteractiveCard className="w-full max-w-md">
+              <div className="glass-panel p-6 sm:p-8 rounded-2xl border border-emerald-500/20 bg-[#0c1224] space-y-6 shadow-2xl text-center">
+                <div className="h-16 w-16 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mx-auto">
+                  <Lock size={32} />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold font-display text-white">Secure Admin Terminal</h2>
+                  <p className="text-xs text-slate-500 mt-1 font-mono">Verify key authorization to bypass shield</p>
+                </div>
+
+                <form onSubmit={handleAdminLogin} className="space-y-4">
+                  <input 
+                    type="password"
+                    required
+                    placeholder="Enter access key..."
+                    value={adminPassword}
+                    onChange={(e) => setAdminPassword(e.target.value)}
+                    className="w-full px-4 py-3 rounded-lg bg-[#070b14] border border-slate-800 text-white focus:outline-none focus:border-emerald-500 transition-all font-mono text-sm text-center"
+                  />
+                  {loginError && <p className="text-xs text-red-400 font-mono flex items-center gap-1.5 justify-center"><AlertCircle size={12} /> {loginError}</p>}
+                  <button type="submit" className="w-full py-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm flex items-center justify-center gap-2 cursor-pointer transition-all">
+                    <Key size={16} /> Authenticate Session
+                  </button>
+                </form>
+                
+                <p className="text-[10px] text-slate-600 font-mono mt-4">💡 Demo default access password: <span className="text-emerald-500">admin</span></p>
+                <a href="#" className="inline-block text-xs font-mono text-slate-500 hover:text-slate-300 mt-2">← Back to Portfolio</a>
+              </div>
+            </InteractiveCard>
+          </div>
+        ) : (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-12 py-12 relative z-10 space-y-8">
+            <div className="flex justify-between items-center border-b border-slate-800 pb-6">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-lg bg-emerald-600/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
+                  <Settings size={22} className="animate-spin" />
+                </div>
+                <div>
+                  <h1 className="text-xl sm:text-2xl font-bold text-white font-display">Command Center</h1>
+                  <p className="text-xs text-slate-500 font-mono">Local CRM & data persistence gateway</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <a href="#" className="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-mono font-semibold flex items-center gap-1.5 transition-colors">
+                  <ArrowLeft size={14} /> Back to Site
+                </a>
+                <button onClick={() => { setAdminLoggedIn(false); setAdminPassword(""); }} className="px-3 py-2 rounded-lg bg-red-900/40 border border-red-500/30 hover:bg-red-800/40 text-red-300 text-xs font-mono font-semibold flex items-center gap-1.5 transition-colors cursor-pointer">
+                  <LogOut size={14} /> Terminate
+                </button>
+              </div>
+            </div>
+
+            {/* Admin Tabs */}
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
+              <div className="md:col-span-3 flex flex-col gap-2 font-mono text-xs">
+                {[
+                  { id: "projects", label: "Manage Projects", icon: FolderPlus },
+                  { id: "timeline", label: "Manage Timeline", icon: Calendar },
+                  { id: "testimonials", label: "Client Reviews", icon: Award },
+                  { id: "inquiries", label: "Inquiries Inbox", count: allInquiries.length, icon: MessageSquare }
+                ].map(tab => {
+                  const Icon = tab.icon;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setAdminTab(tab.id)}
+                      className={`w-full text-left p-3.5 rounded-lg flex justify-between items-center transition-all cursor-pointer border ${
+                        adminTab === tab.id
+                          ? "bg-emerald-600 border-emerald-500 text-white shadow-md"
+                          : "bg-[#0c1224] border-slate-800 text-slate-400 hover:bg-slate-800/60"
+                      }`}
+                    >
+                      <span className="flex items-center gap-2"><Icon size={14} /> {tab.label}</span>
+                      {tab.count !== undefined && <span className="bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 px-1.5 py-0.5 rounded text-[10px] font-bold">{tab.count}</span>}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="md:col-span-9 glass-panel p-6 rounded-2xl border border-slate-800 bg-[#0c1224] space-y-6">
+                
+                {/* PROJECTS MANAGEMENT */}
+                {adminTab === "projects" && (
+                  <div className="space-y-6">
+                    <h3 className="text-lg font-bold font-display text-white">Add New Engineering Project</h3>
+                    <form onSubmit={handleAddProject} className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-mono">
+                      <input type="text" required placeholder="Project unique ID (e.g. omnipos)..." value={newProj.id} onChange={(e) => setNewProj({...newProj, id: e.target.value})} className="p-3 rounded bg-[#070b14] border border-slate-800 text-white focus:border-emerald-500 outline-none" />
+                      <input type="text" required placeholder="Project title..." value={newProj.title} onChange={(e) => setNewProj({...newProj, title: e.target.value})} className="p-3 rounded bg-[#070b14] border border-slate-800 text-white focus:border-emerald-500 outline-none" />
+                      <input type="text" required placeholder="Subtitle / Short description..." value={newProj.subtitle} onChange={(e) => setNewProj({...newProj, subtitle: e.target.value})} className="p-3 rounded bg-[#070b14] border border-slate-800 text-white focus:border-emerald-500 outline-none col-span-1 sm:col-span-2" />
+                      <input type="text" required placeholder="Tech Stack (comma separated)..." value={newProj.tech} onChange={(e) => setNewProj({...newProj, tech: e.target.value})} className="p-3 rounded bg-[#070b14] border border-slate-800 text-white focus:border-emerald-500 outline-none col-span-1 sm:col-span-2" />
+                      <textarea required placeholder="Full project description..." value={newProj.desc} onChange={(e) => setNewProj({...newProj, desc: e.target.value})} className="p-3 rounded bg-[#070b14] border border-slate-800 text-white focus:border-emerald-500 outline-none col-span-1 sm:col-span-2 h-20 resize-none" />
+                      <input type="text" required placeholder="Telemetry Metric (e.g. Uptime)..." value={newProj.metric} onChange={(e) => setNewProj({...newProj, metric: e.target.value})} className="p-3 rounded bg-[#070b14] border border-slate-800 text-white focus:border-emerald-500 outline-none" />
+                      <input type="text" required placeholder="Developer Role..." value={newProj.role} onChange={(e) => setNewProj({...newProj, role: e.target.value})} className="p-3 rounded bg-[#070b14] border border-slate-800 text-white focus:border-emerald-500 outline-none" />
+                      <input type="text" required placeholder="Github URL..." value={newProj.github} onChange={(e) => setNewProj({...newProj, github: e.target.value})} className="p-3 rounded bg-[#070b14] border border-slate-800 text-white focus:border-emerald-500 outline-none" />
+                      <input type="text" placeholder="Live Demo Link (optional)..." value={newProj.live} onChange={(e) => setNewProj({...newProj, live: e.target.value})} className="p-3 rounded bg-[#070b14] border border-slate-800 text-white focus:border-emerald-500 outline-none" />
+                      <textarea required placeholder="Source implementation snippet..." value={newProj.snippet} onChange={(e) => setNewProj({...newProj, snippet: e.target.value})} className="p-3 rounded bg-[#070b14] border border-slate-800 text-white focus:border-emerald-500 outline-none col-span-1 sm:col-span-2 h-24 resize-none" />
+                      
+                      <div className="col-span-1 sm:col-span-2 grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <input type="text" placeholder="Client Layer..." value={newProj.client} onChange={(e) => setNewProj({...newProj, client: e.target.value})} className="p-2.5 rounded bg-[#070b14] border border-slate-800 text-white focus:border-emerald-500 outline-none" />
+                        <input type="text" placeholder="API Routing..." value={newProj.api} onChange={(e) => setNewProj({...newProj, api: e.target.value})} className="p-2.5 rounded bg-[#070b14] border border-slate-800 text-white focus:border-emerald-500 outline-none" />
+                        <input type="text" placeholder="Worker jobs..." value={newProj.jobs} onChange={(e) => setNewProj({...newProj, jobs: e.target.value})} className="p-2.5 rounded bg-[#070b14] border border-slate-800 text-white focus:border-emerald-500 outline-none" />
+                        <input type="text" placeholder="Data Store..." value={newProj.db} onChange={(e) => setNewProj({...newProj, db: e.target.value})} className="p-2.5 rounded bg-[#070b14] border border-slate-800 text-white focus:border-emerald-500 outline-none" />
+                      </div>
+                      
+                      <button type="submit" className="col-span-1 sm:col-span-2 py-3 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-semibold cursor-pointer text-center flex items-center justify-center gap-2">
+                        <Plus size={16} /> Deploy Project to LocalState
+                      </button>
+                    </form>
+
+                    <div className="border-t border-slate-800 pt-6">
+                      <h4 className="text-sm font-semibold text-slate-400 mb-3">Stored Projects Registry</h4>
+                      <div className="space-y-2 max-h-[280px] overflow-y-auto pr-2">
+                        {allProjects.map(p => (
+                          <div key={p.id} className="flex justify-between items-center bg-[#070b14] p-3 rounded border border-slate-800 text-xs font-mono">
+                            <div>
+                              <span className="font-bold text-white">{p.title}</span>
+                              <span className="text-[10px] text-slate-500 block">ID: {p.id}</span>
+                            </div>
+                            <button onClick={() => handleDeleteProject(p.id)} className="p-2 text-red-400 hover:text-red-300 hover:bg-red-950/20 rounded cursor-pointer">
+                              <Trash size={14} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* TIMELINE MANAGEMENT */}
+                {adminTab === "timeline" && (
+                  <div className="space-y-6">
+                    <h3 className="text-lg font-bold font-display text-white">Add Roadmap Checkpoint</h3>
+                    <form onSubmit={handleAddTimeline} className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-mono">
+                      <input type="text" required placeholder="Timeline Year (e.g. 2023 - Present)..." value={newTime.year} onChange={(e) => setNewTime({...newTime, year: e.target.value})} className="p-3 rounded bg-[#070b14] border border-slate-800 text-white focus:border-emerald-500 outline-none" />
+                      <input type="text" required placeholder="Role Title..." value={newTime.role} onChange={(e) => setNewTime({...newTime, role: e.target.value})} className="p-3 rounded bg-[#070b14] border border-slate-800 text-white focus:border-emerald-500 outline-none" />
+                      <input type="text" required placeholder="Company / Institution Name..." value={newTime.company} onChange={(e) => setNewTime({...newTime, company: e.target.value})} className="p-3 rounded bg-[#070b14] border border-slate-800 text-white focus:border-emerald-500 outline-none" />
+                      <select value={newTime.iconType} onChange={(e) => setNewTime({...newTime, iconType: e.target.value})} className="p-3 rounded bg-[#070b14] border border-slate-800 text-white focus:border-emerald-500 outline-none">
+                        <option value="Laptop">Professional (Laptop)</option>
+                        <option value="GraduationCap">Academic (Graduation Cap)</option>
+                      </select>
+                      <textarea required placeholder="Timeline description details..." value={newTime.desc} onChange={(e) => setNewTime({...newTime, desc: e.target.value})} className="p-3 rounded bg-[#070b14] border border-slate-800 text-white focus:border-emerald-500 outline-none col-span-1 sm:col-span-2 h-20 resize-none" />
+                      
+                      <button type="submit" className="col-span-1 sm:col-span-2 py-3 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-semibold cursor-pointer text-center flex items-center justify-center gap-2">
+                        <Plus size={16} /> Deploy Timeline Event
+                      </button>
+                    </form>
+
+                    <div className="border-t border-slate-800 pt-6">
+                      <h4 className="text-sm font-semibold text-slate-400 mb-3">Timeline Registry</h4>
+                      <div className="space-y-2 max-h-[280px] overflow-y-auto pr-2">
+                        {allTimeline.map((t, idx) => (
+                          <div key={idx} className="flex justify-between items-center bg-[#070b14] p-3 rounded border border-slate-800 text-xs font-mono">
+                            <div>
+                              <span className="font-bold text-white">{t.role}</span>
+                              <span className="text-[10px] text-slate-500 block">{t.year} | {t.company}</span>
+                            </div>
+                            <button onClick={() => handleDeleteTimeline(idx)} className="p-2 text-red-400 hover:text-red-300 hover:bg-red-950/20 rounded cursor-pointer">
+                              <Trash size={14} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* TESTIMONIALS MANAGEMENT */}
+                {adminTab === "testimonials" && (
+                  <div className="space-y-6">
+                    <h3 className="text-lg font-bold font-display text-white">Add Client Review</h3>
+                    <form onSubmit={handleAddTestimonial} className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-mono">
+                      <input type="text" required placeholder="Client / Recommender Name..." value={newTestimonial.name} onChange={(e) => setNewTestimonial({...newTestimonial, name: e.target.value})} className="p-3 rounded bg-[#070b14] border border-slate-800 text-white focus:border-emerald-500 outline-none" />
+                      <input type="text" required placeholder="Organization / Venture..." value={newTestimonial.org} onChange={(e) => setNewTestimonial({...newTestimonial, org: e.target.value})} className="p-3 rounded bg-[#070b14] border border-slate-800 text-white focus:border-emerald-500 outline-none" />
+                      <select value={newTestimonial.stars} onChange={(e) => setNewTestimonial({...newTestimonial, stars: parseInt(e.target.value)})} className="p-3 rounded bg-[#070b14] border border-slate-800 text-white focus:border-emerald-500 outline-none">
+                        <option value="5">⭐⭐⭐⭐⭐ (5 Stars)</option>
+                        <option value="4">⭐⭐⭐⭐ (4 Stars)</option>
+                        <option value="3">⭐⭐⭐ (3 Stars)</option>
+                      </select>
+                      <textarea required placeholder="Recommendation text..." value={newTestimonial.text} onChange={(e) => setNewTestimonial({...newTestimonial, text: e.target.value})} className="p-3 rounded bg-[#070b14] border border-slate-800 text-white focus:border-emerald-500 outline-none col-span-1 sm:col-span-2 h-20 resize-none" />
+                      
+                      <button type="submit" className="col-span-1 sm:col-span-2 py-3 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-semibold cursor-pointer text-center flex items-center justify-center gap-2">
+                        <Plus size={16} /> Deploy Testimonial
+                      </button>
+                    </form>
+
+                    <div className="border-t border-slate-800 pt-6">
+                      <h4 className="text-sm font-semibold text-slate-400 mb-3">Reviews Registry</h4>
+                      <div className="space-y-2 max-h-[280px] overflow-y-auto pr-2">
+                        {allTestimonials.map((t, idx) => (
+                          <div key={idx} className="flex justify-between items-center bg-[#070b14] p-3 rounded border border-slate-800 text-xs font-mono">
+                            <div>
+                              <span className="font-bold text-white">{t.name}</span>
+                              <span className="text-[10px] text-slate-500 block">{t.org} | {t.stars} stars</span>
+                            </div>
+                            <button onClick={() => handleDeleteTestimonial(idx)} className="p-2 text-red-400 hover:text-red-300 hover:bg-red-950/20 rounded cursor-pointer">
+                              <Trash size={14} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* INQUIRIES INBOX */}
+                {adminTab === "inquiries" && (
+                  <div className="space-y-6">
+                    <div className="flex justify-between items-center">
+                      <h3 className="text-lg font-bold font-display text-white">Client Inquiry Messages</h3>
+                      {allInquiries.length > 0 && (
+                        <button onClick={handleClearInquiries} className="px-3 py-1.5 rounded bg-red-950/30 border border-red-500/20 hover:bg-red-900/30 text-red-400 text-xs font-mono cursor-pointer flex items-center gap-1.5">
+                          <Trash size={12} /> Clear Inbox
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
+                      {allInquiries.length === 0 ? (
+                        <div className="text-center py-12 text-slate-600 font-mono text-xs">
+                          <MessageSquare size={32} className="mx-auto mb-3 text-slate-700" />
+                          NO MESSAGES RECEIVED YET.<br />
+                          Inbound communications will index here.
+                        </div>
+                      ) : (
+                        allInquiries.map((inq) => (
+                          <div key={inq.id} className="bg-[#070b14] p-5 rounded-xl border border-slate-800 space-y-3 font-mono text-xs">
+                            <div className="flex flex-wrap justify-between items-center gap-2 border-b border-slate-900 pb-2">
+                              <div>
+                                <span className="text-slate-400">From:</span> <span className="text-white font-bold">{inq.name}</span>
+                                <span className="text-slate-500 ml-2">({inq.email})</span>
+                              </div>
+                              <span className="text-[10px] text-slate-500">{inq.date}</span>
+                            </div>
+                            <p className="text-slate-300 leading-relaxed bg-[#0a0f1d] p-3 rounded border border-slate-900/60 whitespace-pre-wrap select-text font-sans text-sm">
+                              {inq.message}
+                            </p>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // STANDARD PORTFOLIO MAIN LAYOUT VIEW
   return (
-    <div className="min-h-screen bg-[#f8fafc] relative overflow-hidden font-sans select-none text-slate-700 pb-12 aurora-bg">
+    <div className="min-h-screen bg-[#f8fafc] relative overflow-hidden font-sans select-none text-slate-700 pb-12 aurora-bg animate-fade-in">
       {/* Dynamic Mouse Follower */}
       <MouseFollower />
 
@@ -938,11 +1509,11 @@ export default function App() {
       <div className="absolute top-[-10%] left-[-10%] w-[55%] h-[55%] bg-emerald-500/5 rounded-full blur-[140px] pointer-events-none z-0 animate-pulse-slow" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[55%] h-[55%] bg-cyan-500/5 rounded-full blur-[140px] pointer-events-none z-0 animate-pulse-slow" />
       
-      {/* Navigation Header */}
+      {/* Navigation Header - Always Glassmorphic for scroll fix */}
       <header className={`sticky top-0 w-full z-50 transition-all duration-300 ${
         scrolled 
-          ? "bg-white/85 shadow-sm border-b border-slate-200/80 backdrop-blur-md py-3.5" 
-          : "bg-transparent border-b border-transparent py-5"
+          ? "bg-white/90 shadow-sm border-b border-slate-200/80 backdrop-blur-md py-3" 
+          : "bg-white/75 shadow-xs border-b border-slate-100/50 backdrop-blur-md py-4"
       } px-4 sm:px-6 md:px-12 flex justify-between items-center`}>
         <div className="flex items-center gap-3">
           <motion.div 
@@ -1003,7 +1574,7 @@ export default function App() {
         {/* Mobile menu trigger */}
         <button 
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="md:hidden text-slate-600 hover:text-slate-900 transition-colors p-1"
+          className="md:hidden text-slate-600 hover:text-slate-900 transition-colors p-1 font-semibold"
         >
           {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
@@ -1046,42 +1617,38 @@ export default function App() {
               transition={{ delay: 0.15 }}
               className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 font-mono text-xs font-semibold"
             >
-              <Sparkles size={14} className="text-emerald-600" />
+              <Sparkles size={14} className="text-emerald-600 animate-spin" />
               SYSTEM_INIT: ONLINE (AWARDS EDITION)
             </motion.div>
             
-            {/* Character Text Reveal Heading */}
-            <h2 className="text-3xl sm:text-4xl md:text-6xl font-extrabold font-display leading-tight text-slate-900 tracking-tight">
-              <span className="inline-block">
-                {titleWords.map((word, idx) => (
-                  <motion.span 
-                    key={idx}
-                    initial={{ opacity: 0, y: 15 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.45, delay: idx * 0.08, ease: "easeOut" }}
-                    className="inline-block mr-2 md:mr-3"
-                  >
-                    {word}
-                  </motion.span>
-                ))}
-              </span>
-              <br />
-              <span className="inline-block bg-gradient-to-r from-emerald-600 via-cyan-600 to-amber-600 bg-clip-text text-transparent text-glow-emerald">
-                {subtitleWords.map((word, idx) => (
-                  <motion.span 
-                    key={idx}
-                    initial={{ opacity: 0, y: 15 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.45, delay: (idx + titleWords.length) * 0.08, ease: "easeOut" }}
-                    className="inline-block mr-2 md:mr-3"
-                  >
-                    {word}
-                  </motion.span>
-                ))}
-              </span>
+            {/* Flex Wrap Responsive Word Reveal */}
+            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold font-display leading-tight text-slate-900 tracking-tight flex flex-wrap gap-x-2 gap-y-1 sm:gap-x-3">
+              {titleWords.map((word, idx) => (
+                <motion.span 
+                  key={idx}
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.45, delay: idx * 0.08, ease: "easeOut" }}
+                  className="inline-block text-slate-900"
+                >
+                  {word}
+                </motion.span>
+              ))}
+              <span className="w-full"></span>
+              {subtitleWords.map((word, idx) => (
+                <motion.span 
+                  key={idx}
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.45, delay: (idx + titleWords.length) * 0.08, ease: "easeOut" }}
+                  className="inline-block bg-gradient-to-r from-emerald-600 via-cyan-600 to-amber-600 bg-clip-text text-transparent text-glow-emerald"
+                >
+                  {word}
+                </motion.span>
+              ))}
             </h2>
 
-            <p className="text-slate-600 text-base md:text-lg leading-relaxed max-w-2xl">
+            <p className="text-slate-600 text-sm sm:text-base md:text-lg leading-relaxed max-w-2xl">
               Hello, I am Jaydeep Khunt, a Full Stack Developer & Systems Architect. Graduating with a BCA degree from 
               Som-Lalit Institute (Ahmedabad), I started my working career in 2023. I architect enterprise ERP management 
               portals, multi-tenant SaaS structures, and automated AI orchestration modules while actively taking on freelance projects.
@@ -1114,7 +1681,7 @@ export default function App() {
                 href="#projects" 
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.98 }}
-                className="px-6 py-3 rounded-lg bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white font-semibold flex items-center gap-2 shadow-md shadow-emerald-500/10 transition-all cursor-pointer"
+                className="px-6 py-3 rounded-lg bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white font-semibold flex items-center gap-2 shadow-md shadow-emerald-500/10 transition-all cursor-pointer text-sm"
               >
                 Explore Portfolio <ChevronRight size={18} />
               </motion.a>
@@ -1124,7 +1691,7 @@ export default function App() {
                 rel="noopener noreferrer" 
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.98 }}
-                className="px-6 py-3 rounded-lg bg-white border border-slate-200 text-slate-800 hover:bg-slate-50 font-semibold flex items-center gap-2 transition-all shadow-sm cursor-pointer"
+                className="px-6 py-3 rounded-lg bg-white border border-slate-200 text-slate-800 hover:bg-slate-50 font-semibold flex items-center gap-2 transition-all shadow-sm cursor-pointer text-sm"
               >
                 <Github size={18} /> GitHub Profile
               </motion.a>
@@ -1181,7 +1748,7 @@ export default function App() {
             
             {/* System log */}
             <div className="flex justify-between items-center mt-3 px-2 font-mono text-[10px] text-slate-500">
-              <span className="flex items-center gap-1"><Activity size={10} className="text-emerald-600" /> Pipeline: Active</span>
+              <span className="flex items-center gap-1"><Activity size={10} className="text-emerald-600 animate-pulse" /> Pipeline: Active</span>
               <span>Memory: 14.8MB / Node</span>
             </div>
           </div>
@@ -1197,7 +1764,7 @@ export default function App() {
           className="space-y-8"
         >
           <div className="text-center max-w-2xl mx-auto space-y-3">
-            <div className="text-xs font-mono text-emerald-600 uppercase tracking-widest font-bold">Architectural Pillars</div>
+            <div className="text-xs font-mono text-emerald-600 uppercase tracking-widest font-bold animate-pulse">Architectural Pillars</div>
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold font-display text-slate-900">Full-Stack Core Competencies</h2>
             <p className="text-slate-600 text-sm sm:text-base">Balancing optimized database scopes and custom native frameworks for robust operations.</p>
           </div>
@@ -1315,7 +1882,7 @@ export default function App() {
                 Select a card on the left to inspect its active live link, operational performance dashboard, database mappings, and source.
               </p>
             </div>
-            <div className="flex items-center gap-2 text-xs font-mono text-slate-500 font-semibold">
+            <div className="flex items-center gap-2 text-xs font-mono text-slate-500 font-semibold font-bold">
               <Activity size={12} className="text-emerald-600 animate-pulse" /> Click cards to inspect system layers
             </div>
           </div>
@@ -1323,19 +1890,19 @@ export default function App() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
             {/* Project List */}
             <div className="lg:col-span-4 space-y-3 max-h-[500px] lg:max-h-[640px] overflow-y-auto pr-2 scrollbar-thin">
-              {projects.map((proj) => (
+              {allProjects.map((proj) => (
                 <button
                   key={proj.id}
                   onClick={() => setSelectedProject(proj)}
                   className={`w-full text-left p-4 rounded-xl transition-all duration-300 cursor-pointer block border ${
-                    selectedProject.id === proj.id
+                    selectedProject && selectedProject.id === proj.id
                       ? "bg-emerald-50 border-emerald-500/30 text-emerald-950 shadow-sm"
                       : "bg-white border-slate-200/80 hover:border-slate-300 hover:bg-slate-50"
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <h3 className="font-bold text-slate-900 text-sm sm:text-base font-display">{proj.title}</h3>
-                    {selectedProject.id === proj.id && (
+                    {selectedProject && selectedProject.id === proj.id && (
                       <span className="text-[9px] font-mono bg-emerald-500/10 text-emerald-700 px-1.5 py-0.5 rounded border border-emerald-500/20 uppercase tracking-wider font-bold">
                         Active
                       </span>
@@ -1361,129 +1928,127 @@ export default function App() {
             </div>
 
             {/* Inspector Details */}
-            <div className="lg:col-span-8 w-full">
-              <InteractiveCard className="w-full">
-                <div className="glass-panel rounded-2xl overflow-hidden border border-slate-200 flex flex-col bg-white shadow-md">
-                  {/* Header HUD */}
-                  <div className="px-4 sm:px-6 py-4 border-b border-slate-100 flex flex-wrap justify-between items-center gap-3 bg-slate-50">
-                    <div className="flex items-center gap-3">
-                      <div className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse"></div>
-                      <div>
-                        <h3 className="font-bold font-display text-slate-900 text-base sm:text-lg leading-none">{selectedProject.title}</h3>
-                        <span className="text-[10px] font-mono text-slate-500">{selectedProject.subtitle}</span>
+            {selectedProject && (
+              <div className="lg:col-span-8 w-full animate-fade-in">
+                <InteractiveCard className="w-full">
+                  <div className="glass-panel rounded-2xl overflow-hidden border border-slate-200 flex flex-col bg-white shadow-md">
+                    {/* Header HUD */}
+                    <div className="px-4 sm:px-6 py-4 border-b border-slate-100 flex flex-wrap justify-between items-center gap-3 bg-slate-50">
+                      <div className="flex items-center gap-3">
+                        <div className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                        <div>
+                          <h3 className="font-bold font-display text-slate-900 text-base sm:text-lg leading-none">{selectedProject.title}</h3>
+                          <span className="text-[10px] font-mono text-slate-500">{selectedProject.subtitle}</span>
+                        </div>
                       </div>
-                    </div>
-                    
-                    {/* Actions */}
-                    <div className="flex items-center gap-2">
-                      <a 
-                        href={selectedProject.github} 
-                        target="_blank" 
-                        rel="noopener noreferrer" 
-                        className="px-2.5 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-[10px] sm:text-xs font-mono text-slate-600 flex items-center gap-1.5 transition-colors font-semibold"
-                      >
-                        <Github size={12} /> Repo
-                      </a>
-                      {selectedProject.live && (
+                      
+                      {/* Actions */}
+                      <div className="flex items-center gap-2">
                         <a 
-                          href={selectedProject.live} 
+                          href={`#project-${selectedProject.id}`} 
+                          className="px-2.5 py-1.5 rounded-lg border border-emerald-500/20 bg-emerald-500/5 hover:bg-emerald-500/10 text-[10px] sm:text-xs font-mono text-emerald-700 flex items-center gap-1.5 transition-colors font-semibold"
+                        >
+                          <Monitor size={12} /> Full Specs Page
+                        </a>
+                        <a 
+                          href={selectedProject.github} 
                           target="_blank" 
                           rel="noopener noreferrer" 
-                          className="px-2.5 py-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-500 text-[10px] sm:text-xs font-mono font-semibold flex items-center gap-1.5 transition-colors shadow-sm"
+                          className="px-2.5 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-[10px] sm:text-xs font-mono text-slate-600 flex items-center gap-1.5 transition-colors font-semibold"
                         >
-                          <ExternalLink size={12} /> Live Link
+                          <Github size={12} /> Repo
                         </a>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Main inspector content */}
-                  <div className="p-4 sm:p-6 space-y-6">
-                    {/* Metrics grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/50">
-                        <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest block font-bold">Role Assignment</span>
-                        <span className="text-xs sm:text-sm font-semibold text-slate-800 mt-1 block font-sans">{selectedProject.role}</span>
-                      </div>
-                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/50">
-                        <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest block font-bold">Performance telemetry</span>
-                        <span className="text-xs sm:text-sm font-semibold text-emerald-700 mt-1 block flex items-center gap-1.5 font-bold font-sans">
-                          <Activity size={14} className="text-emerald-600" /> {selectedProject.metric}
-                        </span>
                       </div>
                     </div>
 
-                    {/* Overview & Live Preview Layout */}
-                    <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-                      <div className="md:col-span-7 space-y-4">
-                        <div>
-                          <h4 className="text-[10px] font-mono text-slate-500 uppercase tracking-widest mb-2 font-bold">Systems Overview</h4>
-                          <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-sans">{selectedProject.desc}</p>
+                    {/* Main inspector content */}
+                    <div className="p-4 sm:p-6 space-y-6">
+                      {/* Metrics grid */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/50">
+                          <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest block font-bold">Role Assignment</span>
+                          <span className="text-xs sm:text-sm font-semibold text-slate-800 mt-1 block font-sans">{selectedProject.role}</span>
+                        </div>
+                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/50">
+                          <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest block font-bold">Performance telemetry</span>
+                          <span className="text-xs sm:text-sm font-semibold text-emerald-700 mt-1 block flex items-center gap-1.5 font-bold font-sans">
+                            <Activity size={14} className="text-emerald-600" /> {selectedProject.metric}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Overview & Live Preview Layout */}
+                      <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+                        <div className="md:col-span-7 space-y-4">
+                          <div>
+                            <h4 className="text-[10px] font-mono text-slate-500 uppercase tracking-widest mb-2 font-bold">Systems Overview</h4>
+                            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-sans">{selectedProject.desc}</p>
+                          </div>
+
+                          <div>
+                            <h4 className="text-[10px] font-mono text-slate-500 uppercase tracking-widest mb-2 font-bold">Technology Stack Matrix</h4>
+                            <div className="flex flex-wrap gap-1.5">
+                              {selectedProject.tech.map((t, idx) => (
+                                <span key={idx} className="text-[10px] sm:text-xs font-mono bg-slate-100 text-emerald-800 px-3 py-1 rounded-full border border-slate-200/60 font-semibold">
+                                  {t}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
                         </div>
 
-                        <div>
-                          <h4 className="text-[10px] font-mono text-slate-500 uppercase tracking-widest mb-2 font-bold">Technology Stack Matrix</h4>
-                          <div className="flex flex-wrap gap-1.5">
-                            {selectedProject.tech.map((t, idx) => (
-                              <span key={idx} className="text-[10px] sm:text-xs font-mono bg-slate-100 text-emerald-800 px-3 py-1 rounded-full border border-slate-200/60 font-semibold">
-                                {t}
-                              </span>
-                            ))}
+                        {/* Device Mockup Visualization Column */}
+                        <div className="md:col-span-5 h-[160px] md:h-auto min-h-[160px] border border-slate-200 rounded-xl overflow-hidden shadow-inner bg-slate-950 relative">
+                          <ProjectMockup projectId={selectedProject.id} />
+                        </div>
+                      </div>
+
+                      {/* Pipeline */}
+                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/60">
+                        <h4 className="text-[10px] font-mono text-slate-500 uppercase tracking-widest mb-3 font-bold">System Architecture Pipeline</h4>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center font-mono text-[9px] sm:text-[10px]">
+                          <div className="p-2 rounded bg-white border border-slate-200">
+                            <div className="text-slate-400">CLIENT LAYER</div>
+                            <div className="text-slate-800 font-semibold truncate mt-1">{selectedProject.architecture.client}</div>
+                          </div>
+                          <div className="p-2 rounded bg-white border border-slate-200">
+                            <div className="text-slate-400">API ROUTING</div>
+                            <div className="text-emerald-700 font-semibold truncate mt-1">{selectedProject.architecture.api}</div>
+                          </div>
+                          <div className="p-2 rounded bg-white border border-slate-200">
+                            <div className="text-slate-400">TASK QUEUE</div>
+                            <div className="text-cyan-700 font-semibold truncate mt-1">{selectedProject.architecture.jobs}</div>
+                          </div>
+                          <div className="p-2 rounded bg-white border border-slate-200">
+                            <div className="text-slate-400">DATA STORE</div>
+                            <div className="text-amber-700 font-semibold truncate mt-1">{selectedProject.architecture.db}</div>
                           </div>
                         </div>
                       </div>
 
-                      {/* Device Mockup Visualization Column */}
-                      <div className="md:col-span-5 h-[160px] md:h-auto min-h-[160px] border border-slate-200 rounded-xl overflow-hidden shadow-inner bg-slate-950 relative">
-                        <ProjectMockup projectId={selectedProject.id} />
-                      </div>
-                    </div>
-
-                    {/* Pipeline */}
-                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/60">
-                      <h4 className="text-[10px] font-mono text-slate-500 uppercase tracking-widest mb-3 font-bold">System Architecture Pipeline</h4>
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center font-mono text-[9px] sm:text-[10px]">
-                        <div className="p-2 rounded bg-white border border-slate-200">
-                          <div className="text-slate-400">CLIENT LAYER</div>
-                          <div className="text-slate-800 font-semibold truncate mt-1">{selectedProject.architecture.client}</div>
+                      {/* Snippet */}
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <h4 className="text-[10px] font-mono text-slate-500 uppercase tracking-widest font-bold">Source Implementation Snippet</h4>
+                          <button 
+                            onClick={() => handleCopyCode(selectedProject.snippet)}
+                            className="text-[9px] sm:text-[10px] font-mono text-emerald-600 hover:text-emerald-700 transition-colors flex items-center gap-1 cursor-pointer p-1 font-bold"
+                          >
+                            {copiedCode ? <CheckCircle size={10} className="text-emerald-600 animate-bounce" /> : <Code size={10} />}
+                            {copiedCode ? "Copied!" : "Copy Snippet"}
+                          </button>
                         </div>
-                        <div className="p-2 rounded bg-white border border-slate-200">
-                          <div className="text-slate-400">API ROUTING</div>
-                          <div className="text-emerald-700 font-semibold truncate mt-1">{selectedProject.architecture.api}</div>
+                        <div className="relative rounded-xl overflow-hidden bg-slate-900 border border-slate-200 max-h-[160px] overflow-y-auto">
+                          <pre className="p-4 font-mono text-[10px] sm:text-[11px] text-emerald-400 leading-relaxed whitespace-pre overflow-x-auto">
+                            <code>{selectedProject.snippet}</code>
+                          </pre>
                         </div>
-                        <div className="p-2 rounded bg-white border border-slate-200">
-                          <div className="text-slate-400">TASK QUEUE</div>
-                          <div className="text-cyan-700 font-semibold truncate mt-1">{selectedProject.architecture.jobs}</div>
-                        </div>
-                        <div className="p-2 rounded bg-white border border-slate-200">
-                          <div className="text-slate-400">DATA STORE</div>
-                          <div className="text-amber-700 font-semibold truncate mt-1">{selectedProject.architecture.db}</div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Snippet */}
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <h4 className="text-[10px] font-mono text-slate-500 uppercase tracking-widest font-bold">Source Implementation Snippet</h4>
-                        <button 
-                          onClick={() => handleCopyCode(selectedProject.snippet)}
-                          className="text-[9px] sm:text-[10px] font-mono text-emerald-600 hover:text-emerald-700 transition-colors flex items-center gap-1 cursor-pointer p-1 font-bold"
-                        >
-                          {copiedCode ? <CheckCircle size={10} className="text-emerald-600" /> : <Code size={10} />}
-                          {copiedCode ? "Copied!" : "Copy Snippet"}
-                        </button>
-                      </div>
-                      <div className="relative rounded-xl overflow-hidden bg-slate-900 border border-slate-200 max-h-[160px] overflow-y-auto">
-                        <pre className="p-4 font-mono text-[10px] sm:text-[11px] text-emerald-400 leading-relaxed whitespace-pre overflow-x-auto">
-                          <code>{selectedProject.snippet}</code>
-                        </pre>
                       </div>
                     </div>
                   </div>
-                </div>
-              </InteractiveCard>
-            </div>
+                </InteractiveCard>
+              </div>
+            )}
           </div>
         </motion.section>
 
@@ -1497,14 +2062,14 @@ export default function App() {
           className="space-y-8"
         >
           <div className="text-center max-w-2xl mx-auto space-y-3">
-            <div className="text-xs font-mono text-emerald-600 uppercase tracking-widest font-bold">Academic & Work Journey</div>
+            <div className="text-xs font-mono text-emerald-600 uppercase tracking-widest font-bold animate-pulse">Academic & Work Journey</div>
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold font-display text-slate-900">Experience Roadmap</h2>
             <p className="text-slate-600 text-sm sm:text-base font-sans">A chronicle mapping out my BCA graduation and active working careers.</p>
           </div>
 
           <div className="relative border-l border-slate-200 max-w-4xl mx-auto pl-5 sm:pl-8 space-y-12">
-            {timeline.map((item, idx) => {
-              const IconComponent = item.icon;
+            {allTimeline.map((item, idx) => {
+              const IconComponent = getTimelineIcon(item);
               return (
                 <div key={idx} className="relative group">
                   {/* Node Icon */}
@@ -1541,13 +2106,13 @@ export default function App() {
           className="space-y-8"
         >
           <div className="text-center max-w-2xl mx-auto space-y-3">
-            <div className="text-xs font-mono text-emerald-600 uppercase tracking-widest font-bold">Endorsements & Recommendations</div>
+            <div className="text-xs font-mono text-emerald-600 uppercase tracking-widest font-bold animate-pulse">Endorsements & Recommendations</div>
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold font-display text-slate-900">Client Reviews</h2>
             <p className="text-slate-600 text-sm sm:text-base font-sans">Feedback compiled from enterprise software integrations and custom projects.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
-            {testimonials.map((t, idx) => (
+            {allTestimonials.map((t, idx) => (
               <InteractiveCard key={idx} className="h-full">
                 <div className="glass-panel p-6 rounded-2xl border border-slate-200 bg-white flex flex-col justify-between h-full space-y-4 shadow-sm">
                   <div className="flex items-center gap-1">
@@ -1596,10 +2161,10 @@ export default function App() {
           whileInView="visible"
           viewport={{ once: true, amount: 0.05 }}
           variants={sectionVariants}
-          className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center"
+          className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center animate-fade-in"
         >
           <div className="lg:col-span-5 space-y-6">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-700 font-mono text-xs font-semibold">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-700 font-mono text-xs font-semibold animate-pulse">
               <Shield size={14} /> SECURE COMMUNICATIONS SHIELD
             </div>
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold font-display text-slate-900">
@@ -1609,10 +2174,55 @@ export default function App() {
               Have an academic portal installation, multi-tenant billing architecture, or customized web solution you want built? 
               Transmit a coordinate message here. 
             </p>
-            <div className="space-y-3 font-mono text-[11px] sm:text-xs text-slate-500">
-              <p className="flex items-center gap-2"><Globe size={14} className="text-emerald-600" /> Target: github.com/kjaydeep842</p>
-              <p className="flex items-center gap-2"><User size={14} className="text-cyan-600" /> Identity: Jaydeep Khunt</p>
-              <p className="flex items-center gap-2"><TerminalIcon size={14} className="text-amber-600" /> Security: SHA-256 Auth Encryption</p>
+
+            {/* Direct Connect Profiles - Color Full Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4">
+              <motion.a 
+                href="tel:+918238812890"
+                whileHover={{ scale: 1.05, y: -4 }}
+                className="p-4 rounded-xl bg-gradient-to-br from-emerald-500/15 to-emerald-600/5 border border-emerald-500/20 text-slate-800 flex flex-col justify-between h-[110px] transition-all relative overflow-hidden shadow-sm cursor-pointer"
+              >
+                <div className="absolute top-0 right-0 w-12 h-12 bg-emerald-500/10 rounded-full blur-lg" />
+                <div className="h-8 w-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-600">
+                  <Smartphone size={16} />
+                </div>
+                <div>
+                  <div className="text-[9px] font-mono uppercase tracking-wider text-emerald-600 font-bold">Call Me</div>
+                  <div className="text-xs font-mono font-bold mt-0.5 text-slate-800">+91 82388 12890</div>
+                </div>
+              </motion.a>
+
+              <motion.a 
+                href="mailto:kjaydeep842@gmail.com"
+                whileHover={{ scale: 1.05, y: -4 }}
+                className="p-4 rounded-xl bg-gradient-to-br from-cyan-500/15 to-cyan-600/5 border border-cyan-500/20 text-slate-800 flex flex-col justify-between h-[110px] transition-all relative overflow-hidden shadow-sm cursor-pointer"
+              >
+                <div className="absolute top-0 right-0 w-12 h-12 bg-cyan-500/10 rounded-full blur-lg" />
+                <div className="h-8 w-8 rounded-lg bg-cyan-500/10 flex items-center justify-center text-cyan-600">
+                  <Send size={16} />
+                </div>
+                <div>
+                  <div className="text-[9px] font-mono uppercase tracking-wider text-cyan-600 font-bold">Email</div>
+                  <div className="text-[11px] font-mono font-bold mt-0.5 text-slate-800 truncate block w-full">kjaydeep842@gmail.com</div>
+                </div>
+              </motion.a>
+
+              <motion.a 
+                href="https://linkedin.com/in/jaydeeppatel28" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                whileHover={{ scale: 1.05, y: -4 }}
+                className="p-4 rounded-xl bg-gradient-to-br from-indigo-500/15 to-indigo-600/5 border border-indigo-500/20 text-slate-800 flex flex-col justify-between h-[110px] transition-all relative overflow-hidden shadow-sm cursor-pointer"
+              >
+                <div className="absolute top-0 right-0 w-12 h-12 bg-indigo-500/10 rounded-full blur-lg" />
+                <div className="h-8 w-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-600">
+                  <Globe size={16} />
+                </div>
+                <div>
+                  <div className="text-[9px] font-mono uppercase tracking-wider text-indigo-600 font-bold">LinkedIn</div>
+                  <div className="text-xs font-mono font-bold mt-0.5 text-slate-800">jaydeeppatel28</div>
+                </div>
+              </motion.a>
             </div>
           </div>
 
@@ -1633,7 +2243,7 @@ export default function App() {
                   </div>
                 ) : sendSuccess ? (
                   <div className="py-8 flex flex-col justify-center items-center text-center min-h-[320px] space-y-4">
-                    <div className="h-16 w-16 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600">
+                    <div className="h-16 w-16 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 animate-bounce">
                       <CheckCircle size={36} />
                     </div>
                     <h3 className="text-xl font-bold text-slate-950 font-display">Payload Transmitted</h3>
@@ -1726,6 +2336,7 @@ export default function App() {
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
           <p>© {new Date().getFullYear()} Jaydeep Khunt. Transmitted securely from Workspace Dev-1.</p>
           <div className="flex gap-6">
+            <a href="#admin" className="text-slate-400 hover:text-emerald-600 transition-colors flex items-center gap-1"><Settings size={12} /> admin</a>
             <a href="https://github.com/kjaydeep842" target="_blank" rel="noopener noreferrer" className="hover:text-emerald-600 transition-colors">github</a>
             <a href="#about" className="hover:text-emerald-600 transition-colors">top</a>
           </div>
