@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useScroll, useTransform, useSpring } from 'framer-motion'
+import Lenis from 'lenis'
 import { 
   Terminal as TerminalIcon, Code, Server, Database, Brain, Cpu, Smartphone, 
   Layout, Layers, ExternalLink, Activity, Send, Award, Calendar, 
@@ -30,6 +31,19 @@ const Github = ({ className, size = 18 }) => (
     className={className}
   >
     <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+  </svg>
+);
+
+// Custom LinkedIn SVG icon
+const LinkedIn = ({ className, size = 18 }) => (
+  <svg
+    viewBox="0 0 24 24"
+    width={size}
+    height={size}
+    fill="currentColor"
+    className={className}
+  >
+    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
   </svg>
 );
 
@@ -171,6 +185,167 @@ const Counter = ({ value, duration = 1.5 }) => {
       {isPercent && '%'}
       {isPlus && '+'}
     </span>
+  );
+};
+
+// --- STEAMPUNK DESIGN & ANIMATION COMPONENTS ---
+
+// Preloader loader component
+const Preloader = ({ onComplete }) => {
+  const [progress, setProgress] = useState(0);
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          setIsReady(true);
+          return 100;
+        }
+        return prev + 1;
+      });
+    }, 25);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <motion.div
+      initial={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.8 }}
+      className="fixed inset-0 bg-[#f8fafc] z-[99999] flex flex-col justify-center items-center select-none aurora-bg"
+    >
+      <div className="relative w-[220px] h-[220px] flex items-center justify-center">
+        {/* Rotating gears */}
+        <img
+          src="/assets/images/gear1.png"
+          className="w-[110px] h-[110px] object-contain animate-rotate-cw opacity-80 emerald-steampunk-tint"
+          alt="gear"
+        />
+        <img
+          src="/assets/images/gear2.png"
+          className="absolute w-[80px] h-[80px] object-contain animate-rotate-ccw opacity-65 origin-center emerald-steampunk-tint"
+          alt="gear"
+        />
+        <img
+          src="/assets/images/gear3.png"
+          className="absolute w-[60px] h-[60px] object-contain animate-rotate-ccw-fast opacity-55 origin-center emerald-steampunk-tint"
+          alt="gear"
+        />
+
+        {/* Circular progress bar */}
+        <svg className="absolute w-[200px] h-[200px] -rotate-90">
+          <circle
+            cx="100"
+            cy="100"
+            r="90"
+            fill="transparent"
+            stroke="rgba(16, 185, 129, 0.08)"
+            strokeWidth="4"
+          />
+          <circle
+            cx="100"
+            cy="100"
+            r="90"
+            fill="transparent"
+            stroke="#10b981"
+            strokeWidth="4"
+            strokeDasharray={2 * Math.PI * 90}
+            strokeDashoffset={2 * Math.PI * 90 * (1 - progress / 100)}
+            className="transition-all duration-100 ease-out"
+          />
+        </svg>
+
+        {isReady && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            whileHover={{ scale: 1.05 }}
+            onClick={onComplete}
+            className="absolute px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-[10px] font-mono tracking-widest font-bold border border-emerald-500 hover:scale-105 transition-all shadow-xl cursor-pointer"
+          >
+            ENTER UNIVERSE
+          </motion.button>
+        )}
+      </div>
+
+      <div className="mt-8 font-mono text-xs text-emerald-700/60 tracking-widest uppercase">
+        {progress < 100 ? `ESTABLISHING CONNECTION: ${progress}%` : "SYSTEM READY"}
+      </div>
+    </motion.div>
+  );
+};
+
+// 3D Tilt Hero Portal component
+const HeroPortal = () => {
+  return (
+    <div className="relative w-[300px] h-[300px] sm:w-[360px] sm:h-[360px] flex items-center justify-center mx-auto">
+      {/* Background gear images */}
+      <img
+        src="/assets/images/portal.png"
+        className="absolute w-[95%] h-[95%] object-contain opacity-[0.22] z-0 pointer-events-none emerald-steampunk-tint animate-rotate-cw"
+        alt="portal"
+      />
+      <img
+        src="/assets/images/gear2.png"
+        className="absolute w-[180px] h-[180px] opacity-[0.15] z-0 pointer-events-none emerald-steampunk-tint animate-rotate-ccw"
+        alt="gear2"
+      />
+      <img
+        src="/assets/images/gear3.png"
+        className="absolute w-[90px] h-[90px] opacity-[0.12] z-0 pointer-events-none emerald-steampunk-tint animate-rotate-cw-fast"
+        alt="gear3"
+      />
+
+      {/* 3D tilt video sphere */}
+      <InteractiveCard className="w-[240px] h-[240px] sm:w-[280px] sm:h-[280px] rounded-full overflow-hidden border border-emerald-500/30 z-10 shadow-2xl flex items-center justify-center">
+        <img
+          src="/assets/images/circle1.svg"
+          className="absolute inset-0 w-full h-full object-cover z-10 pointer-events-none select-none mix-blend-screen opacity-90 emerald-steampunk-tint"
+          alt="portal overlay"
+        />
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute w-[105%] h-[105%] object-cover z-0 scale-[1.03] emerald-steampunk-tint"
+          src="https://paralleluniverse.com.ua/wp-content/themes/e-parallel-smooth/images/video1.mp4"
+        />
+        <div className="absolute inset-0 border border-emerald-500/20 rounded-full z-20 pointer-events-none m-3 animate-rotate-cw" />
+        <div className="absolute inset-0 border border-emerald-500/10 rounded-full z-20 pointer-events-none m-6 animate-rotate-ccw" />
+      </InteractiveCard>
+    </div>
+  );
+};
+
+// Scroll Draw Lines component
+const ScrollDrawLines = () => {
+  const { scrollYProgress } = useScroll();
+  const pathLength = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
+
+  return (
+    <div className="absolute inset-y-0 left-0 right-0 pointer-events-none z-0 overflow-hidden">
+      <svg className="absolute left-4 top-0 h-full w-24 opacity-20 hidden md:block" style={{ minHeight: "100%" }}>
+        <motion.path
+          d="M 10,0 Q 50,500 10,1000 T 10,2000 T 10,3000 T 10,4000"
+          fill="none"
+          stroke="#10b981"
+          strokeWidth="1.5"
+          style={{ pathLength }}
+        />
+      </svg>
+      <svg className="absolute right-4 top-0 h-full w-24 opacity-20 hidden md:block" style={{ minHeight: "100%" }}>
+        <motion.path
+          d="M 80,0 Q 40,500 80,1000 T 80,2000 T 80,3000 T 80,4000"
+          fill="none"
+          stroke="#10b981"
+          strokeWidth="1.5"
+          style={{ pathLength }}
+        />
+      </svg>
+    </div>
   );
 };
 
@@ -1611,14 +1786,54 @@ export default function App() {
           className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center pt-8 md:pt-16"
         >
           <div className="lg:col-span-7 space-y-6">
-            <motion.div 
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.15 }}
-              className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 font-mono text-xs font-semibold"
+
+            {/* ── LinkedIn Profile Card ── */}
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="flex items-center gap-4"
             >
-              <Sparkles size={14} className="text-emerald-600 animate-spin" />
-              SYSTEM_INIT: ONLINE (AWARDS EDITION)
+              {/* Avatar with animated ring */}
+              <div className="relative flex-shrink-0">
+                <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-emerald-400 via-cyan-400 to-emerald-600 animate-spin" style={{ padding: '3px', borderRadius: '9999px', animationDuration: '4s' }}>
+                  <div className="w-full h-full rounded-full bg-white" />
+                </div>
+                <div className="relative w-16 h-16 rounded-full overflow-hidden ring-2 ring-white shadow-lg shadow-emerald-500/20">
+                  <img
+                    src="https://github.com/kjaydeep842.png"
+                    alt="Jaydeep Khunt – LinkedIn Profile"
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = `https://ui-avatars.com/api/?name=Jaydeep+Khunt&background=10b981&color=fff&size=128&bold=true`;
+                    }}
+                  />
+                </div>
+                {/* Online dot */}
+                <span className="absolute bottom-0.5 right-0.5 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-white" />
+              </div>
+
+              {/* Name + badge */}
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h1 className="text-lg font-extrabold font-display text-slate-900 leading-tight">Jaydeep Khunt</h1>
+                  <a
+                    href="https://linkedin.com/in/jaydeeppatel28"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#0A66C2]/10 border border-[#0A66C2]/25 text-[#0A66C2] text-[10px] font-bold font-mono hover:bg-[#0A66C2]/20 transition-colors"
+                  >
+                    <LinkedIn size={10} /> LinkedIn
+                  </a>
+                </div>
+                <p className="text-xs text-slate-500 font-mono mt-0.5">Full Stack Developer · Systems Architect</p>
+                <div className="flex items-center gap-1.5 mt-1.5">
+                  <span className="inline-flex items-center gap-1 text-[10px] font-mono text-emerald-700 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full font-semibold">
+                    <Sparkles size={9} className="animate-spin" /> SYSTEM_INIT: ONLINE
+                  </span>
+                </div>
+              </div>
             </motion.div>
             
             {/* Flex Wrap Responsive Word Reveal */}
@@ -1676,7 +1891,7 @@ export default function App() {
             </div>
 
             {/* Actions */}
-            <div className="flex flex-wrap gap-4 pt-2">
+            <div className="flex flex-wrap gap-3 pt-2">
               <motion.a 
                 href="#projects" 
                 whileHover={{ scale: 1.05, y: -2 }}
@@ -1693,7 +1908,17 @@ export default function App() {
                 whileTap={{ scale: 0.98 }}
                 className="px-6 py-3 rounded-lg bg-white border border-slate-200 text-slate-800 hover:bg-slate-50 font-semibold flex items-center gap-2 transition-all shadow-sm cursor-pointer text-sm"
               >
-                <Github size={18} /> GitHub Profile
+                <Github size={18} /> GitHub
+              </motion.a>
+              <motion.a 
+                href="https://linkedin.com/in/jaydeeppatel28" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.98 }}
+                className="px-6 py-3 rounded-lg bg-[#0A66C2] hover:bg-[#004182] text-white font-semibold flex items-center gap-2 transition-all shadow-sm shadow-blue-500/20 cursor-pointer text-sm"
+              >
+                <LinkedIn size={18} /> LinkedIn
               </motion.a>
             </div>
           </div>

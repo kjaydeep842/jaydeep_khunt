@@ -6,12 +6,71 @@
     --font-display: 'Outfit', sans-serif;
     --font-mono: 'Fira Code', monospace;
   }
-  
+
   html {
-    scroll-behavior: smooth;
+    scroll-behavior: auto !important;
+    background-color: #f8fafc;
   }
 
-  /* Prevent sticky header from overlapping anchor sections */
+  body {
+    background-color: #f8fafc;
+    color: #334155; /* text-slate-700 */
+    font-family: 'Inter', sans-serif;
+    font-weight: 300;
+    line-height: 1.6;
+    letter-spacing: -0.01em;
+    overflow-x: hidden;
+  }
+
+  /* Custom Webkit scrollbar for premium touch */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #f8fafc;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 9999px;
+    transition: all 0.3s;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #10b981;
+  }
+
+  /* Headings in Outfit Font */
+  h1, h2, h3, h4 {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 800;
+    color: #0f172a; /* text-slate-900 */
+    text-transform: uppercase;
+    letter-spacing: -0.04em;
+  }
+
+  h1 {
+    font-size: 4rem;
+    line-height: 1.0;
+  }
+
+  h2 {
+    font-size: 3rem;
+    line-height: 1.1;
+  }
+
+  h3 {
+    font-size: 2.2rem;
+    line-height: 1.1;
+  }
+
+  h4 {
+    font-size: 1.6rem;
+    line-height: 1.2;
+  }
+
   section[id] {
     scroll-margin-top: 100px;
   }
@@ -37,6 +96,15 @@
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(16, 185, 129, 0.08);
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.02);
+}
+
+/* Glass panel styled dark for terminal/code blocks */
+.glass-panel-dark {
+  background: rgba(15, 23, 42, 0.9);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(16, 185, 129, 0.15);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.35);
 }
 
 /* Animated Aurora/Mesh Gradient Background */
@@ -69,43 +137,115 @@
 
 /* Glow effects */
 .text-glow-emerald {
-  text-shadow: 0 0 15px rgba(16, 185, 129, 0.15);
+  text-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
 }
 
-/* Custom Webkit scrollbar for premium touch */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+/* Steampunk Rotating Animations */
+@keyframes circle-cw {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
-::-webkit-scrollbar-track {
-  background: #f8fafc;
+@keyframes circle-ccw {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(-360deg);
+  }
 }
 
-::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 9999px;
-  transition: all 0.3s;
+.animate-rotate-cw {
+  animation: circle-cw 30s linear infinite;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #10b981;
+.animate-rotate-cw-fast {
+  animation: circle-cw 15s linear infinite;
 }
 
-/* Floating animation definitions */
-@keyframes float {
+.animate-rotate-ccw {
+  animation: circle-ccw 30s linear infinite;
+}
+
+.animate-rotate-ccw-fast {
+  animation: circle-ccw 20s linear infinite;
+}
+
+/* Steampunk Emerald Tint to change gold/bronze images into glowing green */
+.emerald-steampunk-tint {
+  filter: hue-rotate(75deg) saturate(2.2) brightness(0.9) contrast(1.05);
+}
+
+/* Mouse Follower */
+.custom-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 24px;
+  height: 24px;
+  border: 1px solid rgba(16, 185, 129, 0.5);
+  background-color: rgba(16, 185, 129, 0.03);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+  transition: width 0.3s, height 0.3s, background-color 0.3s, border-color 0.3s;
+}
+
+.custom-cursor.hovering {
+  width: 48px;
+  height: 48px;
+  border-color: rgba(16, 185, 129, 0.9);
+  background-color: rgba(16, 185, 129, 0.12);
+}
+
+/* Scroll lines styling */
+.scroll-line-path {
+  fill: none;
+  stroke: #10b981;
+  stroke-width: 1.5;
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  transition: stroke-dashoffset 0.1s ease-out;
+}
+
+/* Sound Wave animation */
+@keyframes soundwave {
   0%, 100% {
-    transform: translateY(0px);
+    transform: scaleY(0.3);
   }
   50% {
-    transform: translateY(-8px);
+    transform: scaleY(1.0);
   }
 }
 
-.animate-float {
-  animation: float 6s ease-in-out infinite;
+.wave-bar {
+  display: inline-block;
+  width: 2px;
+  height: 14px;
+  background-color: #10b981;
+  margin: 0 1px;
+  transform-origin: bottom;
+  animation: soundwave 1.2s ease-in-out infinite;
 }
 
+.wave-bar:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.wave-bar:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.wave-bar:nth-child(4) {
+  animation-delay: 0.45s;
+}
+
+/* Interactive Card perspective */
 .perspective-1000 {
   perspective: 1000px;
 }
