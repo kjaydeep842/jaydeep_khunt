@@ -2,12 +2,13 @@ import React, { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence, useScroll, useTransform, useSpring } from 'framer-motion'
 import Lenis from 'lenis'
 import { 
-  Terminal as TerminalIcon, Code, Server, Database, Brain, Cpu, Smartphone, 
+  Terminal, Terminal as TerminalIcon, Code, Server, Database, Brain, Cpu, Smartphone, 
   Layout, Layers, ExternalLink, Activity, Send, Award, Calendar, 
   CheckCircle, Coffee, Compass, Shield, User, Globe, ChevronRight, Menu, X, 
   Play, RefreshCw, Layers3, Monitor, Zap, Sparkles, GraduationCap, Laptop,
   Star, Heart, ArrowRight, HelpCircle, ChevronDown, Check, AlertCircle,
-  Plus, Trash, Key, Lock, Unlock, Settings, FolderPlus, MessageSquare, LogOut, ArrowLeft
+  Plus, Trash, Key, Lock, Unlock, Settings, FolderPlus, MessageSquare, LogOut, ArrowLeft,
+  CreditCard
 } from 'lucide-react'
 
 // --- FORM INTEGRATION CONFIGURATION ---
@@ -916,6 +917,23 @@ const Marquee = () => {
   );
 };
 
+// Helper function to return icon based on project id
+const getProjectIcon = (id) => {
+  switch(id) {
+    case "commerceinstitute": return <GraduationCap className="text-emerald-500" size={20} />;
+    case "omnipos": return <Monitor className="text-cyan-500" size={20} />;
+    case "aosai": return <Brain className="text-purple-500" size={20} />;
+    case "dieselflow": return <Activity className="text-amber-500" size={20} />;
+    case "aiagent": return <Cpu className="text-indigo-500" size={20} />;
+    case "rn": return <Smartphone className="text-blue-500" size={20} />;
+    case "tution_management": return <Layers className="text-emerald-500" size={20} />;
+    case "hotel_management": return <Database className="text-teal-500" size={20} />;
+    case "ecommerce": return <Monitor className="text-indigo-500" size={20} />;
+    case "jewellery": return <Award className="text-amber-500" size={20} />;
+    default: return <Code className="text-emerald-500" size={20} />;
+  }
+};
+
 export default function App() {
   // PERSISTED DATA STATES FOR ADMIN MANAGEMENT
   const [allProjects, setAllProjects] = useState(() => {
@@ -947,6 +965,7 @@ export default function App() {
   // NAVIGATION & ROUTING VIEWS
   const [currentView, setCurrentView] = useState("portfolio"); // "portfolio", "admin", "project-detail"
   const [detailProjectId, setDetailProjectId] = useState("");
+  const [projectFilter, setProjectFilter] = useState("all");
   const [adminPassword, setAdminPassword] = useState("");
   const [adminLoggedIn, setAdminLoggedIn] = useState(false);
   const [adminTab, setAdminTab] = useState("projects"); // "projects", "timeline", "testimonials", "inquiries"
@@ -979,6 +998,379 @@ export default function App() {
   
   // Field validation focus states
   const [focusedField, setFocusedField] = useState(null);
+
+  // Payment Gateway Sandbox States
+  const [paymentForm, setPaymentForm] = useState({
+    name: "John Doe",
+    email: "john.doe@example.com",
+    plan: "Standard Telemetry Cluster",
+    amount: 29.00,
+    gateway: "stripe"
+  });
+  const [paymentLogs, setPaymentLogs] = useState([
+    "PAYMENT GATEWAY ENGINE READY...",
+    "LISTENING FOR INTEGRATION DEPLOYMENT HANDSHAKES..."
+  ]);
+  const [paymentProcessing, setPaymentProcessing] = useState(false);
+  const [paymentVerified, setPaymentVerified] = useState(null); // 'success', 'failed', 'processing', null
+  const [transactions, setTransactions] = useState(() => {
+    const saved = localStorage.getItem('payment_transactions');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [showSimulatedModal, setShowSimulatedModal] = useState(null); // 'razorpay', 'cashfree', null
+  const [simulatedOrderInfo, setSimulatedOrderInfo] = useState(null);
+
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
+  // URL Query Parameters Listener for Payment Redirects
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const paymentStatus = params.get('payment');
+    const gateway = params.get('gateway');
+    const plan = params.get('plan');
+    const amount = params.get('amount');
+    const mode = params.get('mode');
+    
+    if (paymentStatus === 'success' && gateway) {
+      const isSimulated = mode === 'simulation';
+      
+      const verifyRedirectPayment = async () => {
+        setPaymentVerified('processing');
+        const logs = [
+          `DETECTED INCOMING SUCCESS REDIRECT FOR GATEWAY [${gateway.toUpperCase()}]`,
+          isSimulated ? `MODE: SIMULATION MODE ACTIVE` : `MODE: LIVE SANDBOX TRANSACTION`,
+          `PLAN: ${plan || 'Custom Plan'}`,
+          `AMOUNT: ${amount || '0.00'}`,
+          `FETCHING SIGNATURE VERIFICATION FROM BACKEND...`
+        ];
+        
+        for (const log of logs) {
+          setPaymentLogs(prev => [...prev, log]);
+          await new Promise(r => setTimeout(r, 300));
+        }
+
+        try {
+          const body = {
+            gateway,
+            simulated: isSimulated,
+            planName: plan,
+            amount: amount ? parseFloat(amount) : 0
+          };
+          
+          if (gateway === 'stripe') {
+            body.paymentId = params.get('session_id');
+          } else if (gateway === 'paypal') {
+            body.orderId = params.get('token');
+          } else if (gateway === 'cashfree') {
+            body.orderId = params.get('order_id');
+          }
+          
+          const response = await fetch('/api/payments/verify-payment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+          });
+          
+          const data = await response.json();
+          if (data.success) {
+            setPaymentLogs(prev => [...prev, `SUCCESS: SIGNATURE VERIFIED BY SERVER DEPLOYMENT`, `TRANSACTION COMPLETED & RECORDED`]);
+            setPaymentVerified('success');
+            
+            const newTx = {
+              id: 'TX_' + Date.now(),
+              gateway,
+              plan: plan || 'Demo Node',
+              amount: amount ? parseFloat(amount) : 10.00,
+              date: new Date().toLocaleString(),
+              status: 'Success',
+              type: isSimulated ? 'Simulated' : 'Real Test'
+            };
+            
+            setTransactions(prev => {
+              const updated = [newTx, ...prev];
+              localStorage.setItem('payment_transactions', JSON.stringify(updated));
+              return updated;
+            });
+          } else {
+            throw new Error(data.error || 'Verification failed');
+          }
+        } catch (error) {
+          setPaymentLogs(prev => [...prev, `ERROR: VERIFICATION FAILED - ${error.message}`]);
+          setPaymentVerified('failed');
+        }
+      };
+      
+      verifyRedirectPayment();
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (paymentStatus === 'cancel') {
+      setPaymentLogs(prev => [...prev, `TRANSACTION ABORTED BY USER AT GATEWAY CHECKOUT`]);
+      setPaymentVerified('failed');
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
+
+  const handleInitiatePayment = async (e) => {
+    e.preventDefault();
+    if (!paymentForm.name || !paymentForm.email) return;
+    
+    setPaymentProcessing(true);
+    setPaymentLogs(prev => [
+      ...prev,
+      `=========================================`,
+      `INITIATING TELEMETRY TRANSACT COMMAND...`,
+      `CUSTOMER: ${paymentForm.name} <${paymentForm.email}>`,
+      `PRODUCT: ${paymentForm.plan} ($${paymentForm.amount})`,
+      `GATEWAY SELECTED: ${paymentForm.gateway.toUpperCase()}`
+    ]);
+
+    const addLog = (text, delay = 400) => {
+      return new Promise(resolve => {
+        setTimeout(() => {
+          setPaymentLogs(prev => [...prev, text]);
+          resolve();
+        }, delay);
+      });
+    };
+
+    try {
+      await addLog("CONTACTING BACKEND FOR SECURE INTENT CREATION...", 400);
+      
+      if (paymentForm.gateway === 'stripe') {
+        const response = await fetch('/api/payments/create-stripe-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            planName: paymentForm.plan,
+            amount: paymentForm.amount,
+            customerEmail: paymentForm.email
+          })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Server error');
+        
+        await addLog(data.simulated ? "MOCK STRIPE KEY SET. LAUNCHING SIMULATION REDIRECT..." : "STRIPE INTENT VALIDATED. REDIRECTING TO STRIPE CHECKOUT SECURE PAGE...", 500);
+        window.location.href = data.url;
+      } 
+      else if (paymentForm.gateway === 'paypal') {
+        const response = await fetch('/api/payments/create-paypal-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            planName: paymentForm.plan,
+            amount: paymentForm.amount
+          })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Server error');
+        
+        await addLog(data.simulated ? "MOCK PAYPAL CREDENTIALS SET. LAUNCHING SIMULATION REDIRECT..." : "PAYPAL ORDER CREATED. REDIRECTING TO PAYPAL SANDBOX DIALOG...", 500);
+        window.location.href = data.url;
+      }
+      else if (paymentForm.gateway === 'cashfree') {
+        const response = await fetch('/api/payments/create-cashfree-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            planName: paymentForm.plan,
+            amount: paymentForm.amount,
+            customerEmail: paymentForm.email,
+            customerName: paymentForm.name,
+            customerPhone: '9999999999'
+          })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Server error');
+
+        if (data.simulated) {
+          await addLog("MOCK CASHFREE CONFIG DETECTED. OPENING SANDBOX TELEMETRY CHECKOUT MODAL...", 500);
+          setSimulatedOrderInfo({
+            gateway: 'cashfree',
+            orderId: data.orderId,
+            planName: paymentForm.plan,
+            amount: paymentForm.amount
+          });
+          setShowSimulatedModal('cashfree');
+        } else {
+          await addLog("CASHFREE ORDER DEPLOYED. OPENING SECURE CHECKOUT PAGE...", 500);
+          window.location.href = `https://sandbox.cashfree.com/pg/view/checkout?session_id=${data.paymentSessionId}`;
+        }
+      }
+      else if (paymentForm.gateway === 'razorpay') {
+        const response = await fetch('/api/payments/create-razorpay-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            planName: paymentForm.plan,
+            amount: paymentForm.amount
+          })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Server error');
+
+        if (data.simulated) {
+          await addLog("MOCK RAZORPAY CONFIG DETECTED. OPENING SANDBOX RAZORPAY POPUP MODAL...", 500);
+          setSimulatedOrderInfo({
+            gateway: 'razorpay',
+            orderId: data.orderId,
+            planName: paymentForm.plan,
+            amount: paymentForm.amount,
+            key: data.key
+          });
+          setShowSimulatedModal('razorpay');
+        } else {
+          await addLog("RAZORPAY ORDER GENERATED. ATTEMPTING CLIENT SDK INITIALIZATION...", 400);
+          const scriptLoaded = await loadRazorpayScript();
+          if (!scriptLoaded) {
+            throw new Error("Failed to load Razorpay SDK. Check connection.");
+          }
+          
+          await addLog("SDK MOUNTED. OPENING RAZORPAY CHECKOUT DIALOG...", 300);
+          
+          const options = {
+            key: data.key,
+            amount: data.amount,
+            currency: data.currency,
+            name: "Jaydeep Khunt Portfolio",
+            description: paymentForm.plan,
+            order_id: data.orderId,
+            handler: async (response) => {
+              await addLog("RAZORPAY TRANSACTION AUTHORIZED BY CUSTOMER...", 400);
+              await addLog("DISPATCHING SIGNATURE VERIFICATION PAYLOAD...", 300);
+              
+              try {
+                const verifyRes = await fetch('/api/payments/verify-payment', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    gateway: 'razorpay',
+                    orderId: data.orderId,
+                    paymentId: response.razorpay_payment_id,
+                    signature: response.razorpay_signature,
+                    simulated: false
+                  })
+                });
+                
+                const verifyData = await verifyRes.json();
+                if (verifyData.success) {
+                  await addLog("SUCCESS: RAZORPAY SIGNATURE CHECK VERIFIED", 300);
+                  setPaymentVerified('success');
+                  
+                  const newTx = {
+                    id: 'TX_' + Date.now(),
+                    gateway: 'razorpay',
+                    plan: paymentForm.plan,
+                    amount: paymentForm.amount,
+                    date: new Date().toLocaleString(),
+                    status: 'Success',
+                    type: 'Real Test'
+                  };
+                  setTransactions(prev => {
+                    const updated = [newTx, ...prev];
+                    localStorage.setItem('payment_transactions', JSON.stringify(updated));
+                    return updated;
+                  });
+                } else {
+                  throw new Error(verifyData.error || "Verification failed");
+                }
+              } catch (err) {
+                await addLog("ERROR: VERIFICATION SYSTEM DENIED SIGNATURE", 300);
+                setPaymentVerified('failed');
+              }
+            },
+            prefill: {
+              name: paymentForm.name,
+              email: paymentForm.email,
+              contact: "9999999999"
+            },
+            theme: { color: "#10b981" }
+          };
+          
+          const rzp = new window.Razorpay(options);
+          rzp.on('payment.failed', async (response) => {
+            await addLog(`ERROR: TRANSACTION DECLINED - ${response.error.description}`, 400);
+            setPaymentVerified('failed');
+          });
+          rzp.open();
+          setPaymentProcessing(false);
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      await addLog(`ERROR: TRANSACTION SYSTEM CRITICAL FAIL - ${err.message}`, 400);
+      setPaymentProcessing(false);
+    }
+  };
+
+  const handleSimulatedPaymentComplete = async (status) => {
+    setShowSimulatedModal(null);
+    setPaymentProcessing(true);
+    
+    const addLog = (text, delay = 400) => {
+      return new Promise(resolve => {
+        setTimeout(() => {
+          setPaymentLogs(prev => [...prev, text]);
+          resolve();
+        }, delay);
+      });
+    };
+
+    if (status === 'success') {
+      await addLog("SIMULATED PAYMENT CAPTURE AUTHORIZED...", 400);
+      await addLog("DISPATCHING MOCK SIGNATURE PAYLOAD TO VERIFICATION GATEWAY...", 300);
+      
+      try {
+        const verifyRes = await fetch('/api/payments/verify-payment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            gateway: simulatedOrderInfo.gateway,
+            orderId: simulatedOrderInfo.orderId,
+            paymentId: 'pay_sim_' + Math.random().toString(36).substring(7),
+            signature: 'sig_sim_' + Math.random().toString(36).substring(7),
+            simulated: true
+          })
+        });
+        
+        const verifyData = await verifyRes.json();
+        if (verifyData.success) {
+          await addLog("SUCCESS: SIMULATED PAYMENT VERIFIED BY SERVER", 300);
+          setPaymentVerified('success');
+          
+          const newTx = {
+            id: 'TX_' + Date.now(),
+            gateway: simulatedOrderInfo.gateway,
+            plan: simulatedOrderInfo.planName,
+            amount: simulatedOrderInfo.amount,
+            date: new Date().toLocaleString(),
+            status: 'Success',
+            type: 'Simulated'
+          };
+          setTransactions(prev => {
+            const updated = [newTx, ...prev];
+            localStorage.setItem('payment_transactions', JSON.stringify(updated));
+            return updated;
+          });
+        } else {
+          throw new Error("Simulated verification failed");
+        }
+      } catch (err) {
+        await addLog("ERROR: VERIFICATION SYSTEM REJECTED MOCK SIGNATURE", 300);
+        setPaymentVerified('failed');
+      }
+    } else {
+      await addLog("SIMULATED TRANSACTION ABORTED BY USER", 300);
+      setPaymentVerified('failed');
+    }
+    setPaymentProcessing(false);
+  };
   
   const [uptime, setUptime] = useState("99.983%");
   const [coffeeCounter, setCoffeeCounter] = useState(14203);
@@ -998,7 +1390,7 @@ export default function App() {
         setScrollProgress((window.scrollY / totalScroll) * 100);
       }
 
-      const sections = ["about", "skills", "projects", "experience", "faq", "contact"];
+      const sections = ["about", "skills", "projects", "experience", "payments", "faq", "contact"];
       const scrollPosition = window.scrollY + 180;
       for (const section of sections) {
         const el = document.getElementById(section);
@@ -1140,61 +1532,75 @@ export default function App() {
     setSendSuccess(false);
     setSendingLogs([]);
 
-    const logs = [
-      "INITIALIZING SECURE PROTOCOL HANDSHAKE...",
-      "STABLISHING SSH CHANNEL WITH WORKSPACE DEV-1...",
-      "RESOLVING TARGET HOST: github.com/kjaydeep842...",
-      "ENCRYPTING PAYLOAD WITH AES-256 GCM...",
-      "TRANSMITTING ENCRYPTED PACKET BLOCKS...",
-    ];
-
-    if (FORMSPREE_FORM_ID) {
-      logs.push("POSTING TO SECURE EMAIL GATEWAY...");
-      try {
-        const endpointUrl = FORMSPREE_FORM_ID.startsWith("http")
-          ? FORMSPREE_FORM_ID
-          : `https://formspree.io/f/${FORMSPREE_FORM_ID}`;
-        const response = await fetch(endpointUrl, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-          },
-          body: JSON.stringify({
-            name: contactState.name,
-            email: contactState.email,
-            message: contactState.message
-          })
-        });
-        if (!response.ok) throw new Error("Gateway connection error");
-      } catch (err) {
-        logs.push("WARNING: Real email transmission failed. Falling back to local simulation.");
-      }
-    }
-
-    // Save Inquiry to local state and storage
-    const newInquiry = {
-      id: Date.now(),
-      name: contactState.name,
-      email: contactState.email,
-      message: contactState.message,
-      date: new Date().toLocaleString()
+    const addLog = async (logText, delay = 450) => {
+      setSendingLogs(prev => [...prev, logText]);
+      await new Promise(resolve => setTimeout(resolve, delay));
     };
-    const updatedInquiries = [...allInquiries, newInquiry];
-    setAllInquiries(updatedInquiries);
-    localStorage.setItem('portfolio_inquiries', JSON.stringify(updatedInquiries));
 
-    logs.push("VERIFYING INTEGRITY CHECK (HMAC-SHA256)...");
-    logs.push("TRANSMISSION COMPLETED SUCCESSFULLY.");
+    try {
+      await addLog("INITIALIZING SECURE PROTOCOL HANDSHAKE...");
+      await addLog("ESTABLISHING SSH CHANNEL WITH BACKEND SERVER...");
+      await addLog("ENCRYPTING PAYLOAD WITH AES-256 GCM...");
+      await addLog("TRANSMITTING ENCRYPTED PACKET BLOCKS TO API...");
 
-    for (let i = 0; i < logs.length; i++) {
-      await new Promise(resolve => setTimeout(resolve, 400));
-      setSendingLogs(prev => [...prev, logs[i]]);
+      const response = await fetch('/api/contact', {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          name: contactState.name,
+          email: contactState.email,
+          message: contactState.message
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error("API responded with an error status: " + response.status);
+      }
+
+      await addLog("SECURE SMTP LINK ROUTED SUCCESSFULLY...");
+      await addLog("DISPATCHING OWNER NOTIFICATION & USER THANK-YOU EMAIL...");
+      await addLog("VERIFYING INTEGRITY CHECK (HMAC-SHA256)...");
+      await addLog("TRANSMISSION COMPLETED SUCCESSFULLY.");
+      
+      // Save Inquiry to local state and storage (for local CRM dashboard)
+      const newInquiry = {
+        id: Date.now(),
+        name: contactState.name,
+        email: contactState.email,
+        message: contactState.message,
+        date: new Date().toLocaleString()
+      };
+      const updatedInquiries = [...allInquiries, newInquiry];
+      setAllInquiries(updatedInquiries);
+      localStorage.setItem('portfolio_inquiries', JSON.stringify(updatedInquiries));
+      
+      setIsSending(false);
+      setSendSuccess(true);
+      setContactState({ name: "", email: "", message: "" });
+    } catch (err) {
+      console.error(err);
+      await addLog("WARNING: API transmission failed. Server might be offline.");
+      await addLog("FALLING BACK TO LOCAL STORAGE PERSISTENCE...");
+      
+      // Fallback: Save to Local Storage CRM
+      const newInquiry = {
+        id: Date.now(),
+        name: contactState.name,
+        email: contactState.email,
+        message: contactState.message,
+        date: new Date().toLocaleString()
+      };
+      const updatedInquiries = [...allInquiries, newInquiry];
+      setAllInquiries(updatedInquiries);
+      localStorage.setItem('portfolio_inquiries', JSON.stringify(updatedInquiries));
+      
+      setIsSending(false);
+      setSendSuccess(true);
+      setContactState({ name: "", email: "", message: "" });
     }
 
-    setIsSending(false);
-    setSendSuccess(true);
-    setContactState({ name: "", email: "", message: "" });
     setTimeout(() => {
       setSendSuccess(false);
       setSendingLogs([]);
@@ -1715,6 +2121,7 @@ export default function App() {
             { id: "skills", label: "skills" },
             { id: "projects", label: "systems_portfolio" },
             { id: "experience", label: "roadmap" },
+            { id: "payments", label: "payments" },
             { id: "faq", label: "faqs" }
           ].map((navItem) => (
             <a 
@@ -1768,6 +2175,7 @@ export default function App() {
             <a href="#skills" onClick={() => setMobileMenuOpen(false)} className="text-slate-700 hover:text-emerald-600 py-2 border-b border-slate-100 uppercase tracking-wider">skills</a>
             <a href="#projects" onClick={() => setMobileMenuOpen(false)} className="text-slate-700 hover:text-emerald-600 py-2 border-b border-slate-100 uppercase tracking-wider">systems_portfolio</a>
             <a href="#experience" onClick={() => setMobileMenuOpen(false)} className="text-slate-700 hover:text-emerald-600 py-2 border-b border-slate-100 uppercase tracking-wider">roadmap</a>
+            <a href="#payments" onClick={() => setMobileMenuOpen(false)} className="text-slate-700 hover:text-emerald-600 py-2 border-b border-slate-100 uppercase tracking-wider">payments</a>
             <a href="#faq" onClick={() => setMobileMenuOpen(false)} className="text-slate-700 hover:text-emerald-600 py-2 border-b border-slate-100 uppercase tracking-wider">faqs</a>
             <a href="#contact" onClick={() => setMobileMenuOpen(false)} className="py-2 text-emerald-600 font-semibold uppercase tracking-wider">secure_message</a>
           </motion.div>
@@ -1801,7 +2209,7 @@ export default function App() {
                 </div>
                 <div className="relative w-16 h-16 rounded-full overflow-hidden ring-2 ring-white shadow-lg shadow-emerald-500/20">
                   <img
-                    src="https://github.com/kjaydeep842.png"
+                    src="https://media.licdn.com/dms/image/v2/D5603AQF1ysuE4Eg9Tg/profile-displayphoto-scale_200_200/B56ZxLBzWTIEAY-/0/1770785292078?e=2147483647&v=beta&t=82Y9WDiRPPFsJ7aXEFgZx6l_GkI4tgMrWTJmTTMufS4"
                     alt="Jaydeep Khunt – LinkedIn Profile"
                     className="w-full h-full object-cover"
                     onError={(e) => {
@@ -2099,182 +2507,150 @@ export default function App() {
           variants={sectionVariants}
           className="space-y-8"
         >
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 border-b border-slate-100 pb-6">
             <div className="space-y-3">
               <div className="text-xs font-mono text-emerald-600 uppercase tracking-widest font-bold">Active Engineering Artifacts</div>
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold font-display text-slate-900">Systems Portfolio</h2>
               <p className="text-slate-600 text-sm sm:text-base max-w-2xl font-sans">
-                Select a card on the left to inspect its active live link, operational performance dashboard, database mappings, and source.
+                Explore an interactive grid of scalable SaaS architectures, enterprise ERP modules, and high-performance system integrations. Click any card to view detailed specifications, telemetry data, and source implementation blueprints.
               </p>
             </div>
-            <div className="flex items-center gap-2 text-xs font-mono text-slate-500 font-semibold font-bold">
-              <Activity size={12} className="text-emerald-600 animate-pulse" /> Click cards to inspect system layers
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
-            {/* Project List */}
-            <div className="lg:col-span-4 space-y-3 max-h-[500px] lg:max-h-[640px] overflow-y-auto pr-2 scrollbar-thin">
-              {allProjects.map((proj) => (
+            
+            {/* Filter Tabs */}
+            <div className="flex flex-wrap gap-2 flex-shrink-0 bg-slate-100/80 p-1.5 rounded-2xl border border-slate-200/50">
+              {[
+                { id: "all", label: "All Systems" },
+                { id: "saas", label: "SaaS & ERP Hubs" },
+                { id: "ai", label: "AI & Telemetry" }
+              ].map(tab => (
                 <button
-                  key={proj.id}
-                  onClick={() => setSelectedProject(proj)}
-                  className={`w-full text-left p-4 rounded-xl transition-all duration-300 cursor-pointer block border ${
-                    selectedProject && selectedProject.id === proj.id
-                      ? "bg-emerald-50 border-emerald-500/30 text-emerald-950 shadow-sm"
-                      : "bg-white border-slate-200/80 hover:border-slate-300 hover:bg-slate-50"
+                  key={tab.id}
+                  onClick={() => setProjectFilter(tab.id)}
+                  className={`px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all duration-300 cursor-pointer ${
+                    projectFilter === tab.id
+                      ? "bg-white text-emerald-700 shadow-sm border border-emerald-500/10"
+                      : "text-slate-600 hover:text-slate-800 hover:bg-white/40"
                   }`}
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <h3 className="font-bold text-slate-900 text-sm sm:text-base font-display">{proj.title}</h3>
-                    {selectedProject && selectedProject.id === proj.id && (
-                      <span className="text-[9px] font-mono bg-emerald-500/10 text-emerald-700 px-1.5 py-0.5 rounded border border-emerald-500/20 uppercase tracking-wider font-bold">
-                        Active
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-slate-500 line-clamp-1 mt-1 font-sans">{proj.subtitle}</p>
-                  
-                  {/* Pills */}
-                  <div className="flex flex-wrap gap-1.5 mt-3">
-                    {proj.tech.slice(0, 3).map((t, idx) => (
-                      <span key={idx} className="text-[9px] font-mono bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded border border-slate-200/50">
-                        {t}
-                      </span>
-                    ))}
-                    {proj.tech.length > 3 && (
-                      <span className="text-[9px] font-mono text-emerald-600 font-bold px-1.5 py-0.5">
-                        +{proj.tech.length - 3} more
-                      </span>
-                    )}
-                  </div>
+                  {tab.label}
                 </button>
               ))}
             </div>
+          </div>
 
-            {/* Inspector Details */}
-            {selectedProject && (
-              <div className="lg:col-span-8 w-full animate-fade-in">
-                <InteractiveCard className="w-full">
-                  <div className="glass-panel rounded-2xl overflow-hidden border border-slate-200 flex flex-col bg-white shadow-md">
-                    {/* Header HUD */}
-                    <div className="px-4 sm:px-6 py-4 border-b border-slate-100 flex flex-wrap justify-between items-center gap-3 bg-slate-50">
-                      <div className="flex items-center gap-3">
-                        <div className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse"></div>
-                        <div>
-                          <h3 className="font-bold font-display text-slate-900 text-base sm:text-lg leading-none">{selectedProject.title}</h3>
-                          <span className="text-[10px] font-mono text-slate-500">{selectedProject.subtitle}</span>
-                        </div>
-                      </div>
+          {/* Cards Grid */}
+          <motion.div 
+            layout
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 pt-4"
+          >
+            <AnimatePresence mode="popLayout">
+              {allProjects
+                .filter(p => {
+                  if (projectFilter === "saas") {
+                    return ["commerceinstitute", "omnipos", "tution_management", "hotel_management", "ecommerce", "jewellery"].includes(p.id);
+                  }
+                  if (projectFilter === "ai") {
+                    return ["aosai", "dieselflow", "aiagent", "rn"].includes(p.id);
+                  }
+                  return true;
+                })
+                .map((proj) => {
+                  const isSaaS = ["commerceinstitute", "omnipos", "tution_management", "hotel_management", "ecommerce", "jewellery"].includes(proj.id);
+                  return (
+                    <motion.div
+                      key={proj.id}
+                      layout
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      transition={{ duration: 0.4 }}
+                      whileHover={{ y: -6, transition: { duration: 0.2 } }}
+                      onClick={() => {
+                        window.location.hash = `#project-${proj.id}`;
+                      }}
+                      className="glass-panel rounded-2xl border border-slate-200/80 p-5 flex flex-col justify-between hover:border-emerald-500/35 hover:shadow-lg hover:shadow-emerald-500/5 transition-all duration-300 cursor-pointer relative overflow-hidden group min-h-[290px] bg-white/70 backdrop-blur-md"
+                    >
+                      {/* Interactive glow effect */}
+                      <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500/0 via-emerald-500/0 to-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                       
-                      {/* Actions */}
-                      <div className="flex items-center gap-2">
-                        <a 
-                          href={`#project-${selectedProject.id}`} 
-                          className="px-2.5 py-1.5 rounded-lg border border-emerald-500/20 bg-emerald-500/5 hover:bg-emerald-500/10 text-[10px] sm:text-xs font-mono text-emerald-700 flex items-center gap-1.5 transition-colors font-semibold"
-                        >
-                          <Monitor size={12} /> Full Specs Page
-                        </a>
-                        <a 
-                          href={selectedProject.github} 
-                          target="_blank" 
-                          rel="noopener noreferrer" 
-                          className="px-2.5 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-[10px] sm:text-xs font-mono text-slate-600 flex items-center gap-1.5 transition-colors font-semibold"
-                        >
-                          <Github size={12} /> Repo
-                        </a>
-                      </div>
-                    </div>
-
-                    {/* Main inspector content */}
-                    <div className="p-4 sm:p-6 space-y-6">
-                      {/* Metrics grid */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/50">
-                          <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest block font-bold">Role Assignment</span>
-                          <span className="text-xs sm:text-sm font-semibold text-slate-800 mt-1 block font-sans">{selectedProject.role}</span>
-                        </div>
-                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/50">
-                          <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest block font-bold">Performance telemetry</span>
-                          <span className="text-xs sm:text-sm font-semibold text-emerald-700 mt-1 block flex items-center gap-1.5 font-bold font-sans">
-                            <Activity size={14} className="text-emerald-600" /> {selectedProject.metric}
+                      <div className="space-y-4 relative z-10">
+                        {/* Terminal status bar */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex gap-1.5">
+                            <span className="w-2.5 h-2.5 rounded-full bg-red-400/80" />
+                            <span className="w-2.5 h-2.5 rounded-full bg-amber-400/80" />
+                            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400/80" />
+                          </div>
+                          <span className="inline-flex items-center gap-1.5 text-[9px] font-mono text-emerald-700 bg-emerald-500/10 border border-emerald-500/15 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Active Node
                           </span>
                         </div>
-                      </div>
 
-                      {/* Overview & Live Preview Layout */}
-                      <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-                        <div className="md:col-span-7 space-y-4">
+                        {/* Project Identifier / Icon */}
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200/60 flex items-center justify-center group-hover:scale-110 group-hover:border-emerald-500/30 group-hover:bg-emerald-50/50 transition-all duration-300">
+                            {getProjectIcon(proj.id)}
+                          </div>
                           <div>
-                            <h4 className="text-[10px] font-mono text-slate-500 uppercase tracking-widest mb-2 font-bold">Systems Overview</h4>
-                            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-sans">{selectedProject.desc}</p>
-                          </div>
-
-                          <div>
-                            <h4 className="text-[10px] font-mono text-slate-500 uppercase tracking-widest mb-2 font-bold">Technology Stack Matrix</h4>
-                            <div className="flex flex-wrap gap-1.5">
-                              {selectedProject.tech.map((t, idx) => (
-                                <span key={idx} className="text-[10px] sm:text-xs font-mono bg-slate-100 text-emerald-800 px-3 py-1 rounded-full border border-slate-200/60 font-semibold">
-                                  {t}
-                                </span>
-                              ))}
-                            </div>
+                            <h3 className="text-base font-bold font-display text-slate-900 group-hover:text-emerald-700 transition-colors leading-snug">{proj.title}</h3>
+                            <p className="text-[10px] font-mono text-slate-400 uppercase tracking-wider leading-none mt-0.5">{isSaaS ? "SaaS Platform" : "System Engine"}</p>
                           </div>
                         </div>
 
-                        {/* Device Mockup Visualization Column */}
-                        <div className="md:col-span-5 h-[160px] md:h-auto min-h-[160px] border border-slate-200 rounded-xl overflow-hidden shadow-inner bg-slate-950 relative">
-                          <ProjectMockup projectId={selectedProject.id} />
-                        </div>
-                      </div>
+                        {/* Description */}
+                        <p className="text-xs text-slate-600 font-sans leading-relaxed line-clamp-3">
+                          {proj.desc}
+                        </p>
 
-                      {/* Pipeline */}
-                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/60">
-                        <h4 className="text-[10px] font-mono text-slate-500 uppercase tracking-widest mb-3 font-bold">System Architecture Pipeline</h4>
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center font-mono text-[9px] sm:text-[10px]">
-                          <div className="p-2 rounded bg-white border border-slate-200">
-                            <div className="text-slate-400">CLIENT LAYER</div>
-                            <div className="text-slate-800 font-semibold truncate mt-1">{selectedProject.architecture.client}</div>
-                          </div>
-                          <div className="p-2 rounded bg-white border border-slate-200">
-                            <div className="text-slate-400">API ROUTING</div>
-                            <div className="text-emerald-700 font-semibold truncate mt-1">{selectedProject.architecture.api}</div>
-                          </div>
-                          <div className="p-2 rounded bg-white border border-slate-200">
-                            <div className="text-slate-400">TASK QUEUE</div>
-                            <div className="text-cyan-700 font-semibold truncate mt-1">{selectedProject.architecture.jobs}</div>
-                          </div>
-                          <div className="p-2 rounded bg-white border border-slate-200">
-                            <div className="text-slate-400">DATA STORE</div>
-                            <div className="text-amber-700 font-semibold truncate mt-1">{selectedProject.architecture.db}</div>
-                          </div>
+                        {/* Tech pills */}
+                        <div className="flex flex-wrap gap-1.5 pt-1">
+                          {proj.tech.slice(0, 3).map((t, idx) => (
+                            <span key={idx} className="text-[9px] font-mono bg-slate-50 text-slate-600 px-2 py-0.5 rounded border border-slate-200/50 font-semibold">
+                              {t}
+                            </span>
+                          ))}
+                          {proj.tech.length > 3 && (
+                            <span className="text-[9px] font-mono text-emerald-600 font-bold px-1 py-0.5">
+                              +{proj.tech.length - 3} more
+                            </span>
+                          )}
                         </div>
                       </div>
 
-                      {/* Snippet */}
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-center">
-                          <h4 className="text-[10px] font-mono text-slate-500 uppercase tracking-widest font-bold">Source Implementation Snippet</h4>
-                          <button 
-                            onClick={() => handleCopyCode(selectedProject.snippet)}
-                            className="text-[9px] sm:text-[10px] font-mono text-emerald-600 hover:text-emerald-700 transition-colors flex items-center gap-1 cursor-pointer p-1 font-bold"
+                      {/* Bottom row */}
+                      <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between relative z-10">
+                        {/* Telemetry metadata */}
+                        <div className="min-w-0 pr-2">
+                          <span className="text-[8px] font-mono text-slate-400 uppercase tracking-widest block leading-none font-bold">Telemetry</span>
+                          <span className="text-[10px] font-semibold text-slate-700 font-sans truncate block mt-1 flex items-center gap-1.5">
+                            <Activity size={10} className="text-emerald-500 animate-pulse flex-shrink-0" /> {proj.metric}
+                          </span>
+                        </div>
+                        
+                        {/* Action buttons */}
+                        <div className="flex gap-2 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                          <a 
+                            href={proj.github} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-400 hover:text-slate-700 transition-colors"
+                            title="View Repository"
                           >
-                            {copiedCode ? <CheckCircle size={10} className="text-emerald-600 animate-bounce" /> : <Code size={10} />}
-                            {copiedCode ? "Copied!" : "Copy Snippet"}
-                          </button>
-                        </div>
-                        <div className="relative rounded-xl overflow-hidden bg-slate-900 border border-slate-200 max-h-[160px] overflow-y-auto">
-                          <pre className="p-4 font-mono text-[10px] sm:text-[11px] text-emerald-400 leading-relaxed whitespace-pre overflow-x-auto">
-                            <code>{selectedProject.snippet}</code>
-                          </pre>
+                            <Github size={14} />
+                          </a>
+                          <a 
+                            href={`#project-${proj.id}`}
+                            className="px-2.5 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200/30 text-emerald-700 text-[10px] font-mono font-bold flex items-center gap-1 group-hover:bg-emerald-600 group-hover:text-white group-hover:border-emerald-600 transition-all duration-300 shadow-sm"
+                          >
+                            Specs <ArrowRight size={10} className="group-hover:translate-x-0.5 transition-transform" />
+                          </a>
                         </div>
                       </div>
-                    </div>
-                  </div>
-                </InteractiveCard>
-              </div>
-            )}
-          </div>
+                    </motion.div>
+                  );
+                })}
+            </AnimatePresence>
+          </motion.div>
         </motion.section>
 
         {/* EXPERIENCE ROADMAP */}
@@ -2358,6 +2734,231 @@ export default function App() {
                 </div>
               </InteractiveCard>
             ))}
+          </div>
+        </motion.section>
+
+        {/* SECURE PAYMENTS SANDBOX SECTION */}
+        <motion.section 
+          id="payments"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.05 }}
+          variants={sectionVariants}
+          className="space-y-8"
+        >
+          <div className="text-center max-w-2xl mx-auto space-y-3">
+            <div className="text-xs font-mono text-emerald-600 uppercase tracking-widest font-bold">Secure Gateway Sandbox</div>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold font-display text-slate-900">Payment Gateways Integration</h2>
+            <p className="text-slate-600 text-sm sm:text-base font-sans">
+              Interactive sandbox simulating checkouts for Stripe, PayPal, Razorpay, and Cashfree. Real test mode works when credentials are added to the environment configuration.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            {/* Payment form */}
+            <div className="lg:col-span-5 bg-white border border-slate-200 rounded-xl p-6 shadow-sm space-y-6">
+              <h3 className="text-lg font-bold text-slate-900 font-display flex items-center gap-2 border-b border-slate-100 pb-3">
+                <CreditCard className="text-emerald-600" size={20} />
+                Checkout Terminal
+              </h3>
+              
+              <form onSubmit={handleInitiatePayment} className="space-y-4">
+                {/* Customer Details */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-mono font-bold text-slate-500 uppercase">Customer Name</label>
+                  <input 
+                    type="text" 
+                    value={paymentForm.name}
+                    onChange={(e) => setPaymentForm(prev => ({ ...prev, name: e.target.value }))}
+                    className="w-full px-3.5 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-colors"
+                    placeholder="John Doe"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-mono font-bold text-slate-500 uppercase">Customer Email</label>
+                  <input 
+                    type="email" 
+                    value={paymentForm.email}
+                    onChange={(e) => setPaymentForm(prev => ({ ...prev, email: e.target.value }))}
+                    className="w-full px-3.5 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-colors"
+                    placeholder="john.doe@example.com"
+                    required
+                  />
+                </div>
+
+                {/* Plan Selection */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-mono font-bold text-slate-500 uppercase block">Select Target Package</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { name: "Lite Node", amount: 9.00 },
+                      { name: "Standard Cluster", amount: 29.00 },
+                      { name: "Enterprise Reactor", amount: 99.00 }
+                    ].map((p) => (
+                      <button
+                        key={p.name}
+                        type="button"
+                        onClick={() => setPaymentForm(prev => ({ ...prev, plan: p.name, amount: p.amount }))}
+                        className={`p-3 rounded-lg border text-left flex flex-col justify-between transition-all ${
+                          paymentForm.plan === p.name 
+                            ? 'border-emerald-600 bg-emerald-50/40 ring-1 ring-emerald-500' 
+                            : 'border-slate-200 hover:border-slate-300 bg-slate-50/50'
+                        }`}
+                      >
+                        <span className="text-[10px] font-bold font-sans text-slate-700 truncate">{p.name}</span>
+                        <span className="text-sm font-bold text-slate-900 font-mono mt-1">${p.amount}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Gateway Selection */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-mono font-bold text-slate-500 uppercase block">Payment Gateway Provider</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { id: "stripe", name: "Stripe" },
+                      { id: "paypal", name: "PayPal" },
+                      { id: "razorpay", name: "Razorpay" },
+                      { id: "cashfree", name: "Cashfree" }
+                    ].map((g) => (
+                      <button
+                        key={g.id}
+                        type="button"
+                        onClick={() => setPaymentForm(prev => ({ ...prev, gateway: g.id }))}
+                        className={`p-3 rounded-lg border flex items-center justify-between transition-all ${
+                          paymentForm.gateway === g.id 
+                            ? 'border-emerald-600 bg-emerald-50 ring-1 ring-emerald-500' 
+                            : 'border-slate-200 hover:border-slate-300'
+                        }`}
+                      >
+                        <div className="flex items-center gap-1.5">
+                          <span className={`w-2 h-2 rounded-full ${paymentForm.gateway === g.id ? 'bg-emerald-600' : 'bg-slate-300'}`} />
+                          <span className="text-xs font-bold text-slate-800">{g.name}</span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Submit button */}
+                <button
+                  type="submit"
+                  disabled={paymentProcessing}
+                  className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-mono font-bold text-xs uppercase tracking-wider transition-all shadow-md shadow-emerald-600/10 flex items-center justify-center gap-2 disabled:bg-slate-300 disabled:cursor-not-allowed"
+                >
+                  {paymentProcessing ? (
+                    <>
+                      <RefreshCw size={14} className="animate-spin" />
+                      Deploying Request...
+                    </>
+                  ) : (
+                    <>
+                      <Play size={12} />
+                      Initiate secure_${paymentForm.gateway}
+                    </>
+                  )}
+                </button>
+              </form>
+            </div>
+
+            {/* Terminal debug logs & Ledger */}
+            <div className="lg:col-span-7 space-y-6">
+              {/* Terminal logs */}
+              <div className="bg-slate-950 rounded-xl border border-slate-800 p-4 font-mono text-xs text-slate-300 shadow-xl relative overflow-hidden flex flex-col h-[280px]">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-2 mb-2 text-[10px] text-slate-500 uppercase tracking-widest font-bold">
+                  <div className="flex items-center gap-1.5">
+                    <Terminal size={14} className="text-emerald-500" />
+                    <span>Secure Gateway Telemetry Feed</span>
+                  </div>
+                  <button 
+                    onClick={() => setPaymentLogs(["PAYMENT GATEWAY ENGINE READY...", "FEED CLEARED."])}
+                    className="hover:text-slate-300 transition-colors"
+                  >
+                    Clear Feed
+                  </button>
+                </div>
+                
+                <div className="flex-1 overflow-y-auto space-y-1 scrollbar-thin scrollbar-thumb-slate-800 scrollbar-track-transparent">
+                  {paymentLogs.map((log, i) => (
+                    <div key={i} className={`leading-relaxed break-all ${
+                      log.startsWith('ERROR:') ? 'text-rose-400 font-bold' : 
+                      log.startsWith('SUCCESS:') ? 'text-emerald-400 font-bold' : 
+                      log.startsWith('======') ? 'text-slate-600' :
+                      log.startsWith('INITIATING') ? 'text-cyan-400 font-bold' :
+                      'text-slate-300'
+                    }`}>
+                      {log.startsWith('======') ? log : `> ${log}`}
+                    </div>
+                  ))}
+                  <div ref={terminalBottomRef} />
+                </div>
+              </div>
+
+              {/* Transactions Ledger */}
+              <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+                  <h3 className="text-base font-bold text-slate-900 font-display flex items-center gap-2">
+                    <Award size={18} className="text-emerald-600" />
+                    Transaction Ledger
+                  </h3>
+                  {transactions.length > 0 && (
+                    <button 
+                      onClick={() => {
+                        setTransactions([]);
+                        localStorage.removeItem('payment_transactions');
+                      }}
+                      className="text-[10px] font-mono font-bold text-rose-600 hover:text-rose-700 hover:underline uppercase"
+                    >
+                      Purge Ledger
+                    </button>
+                  )}
+                </div>
+
+                {transactions.length === 0 ? (
+                  <div className="text-center py-6 text-slate-400 text-xs font-sans">
+                    No transactions captured. Deploy a secure checkout command above to populate ledger.
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto border-t border-slate-100 pt-2">
+                    <table className="w-full text-left font-sans text-xs border-collapse">
+                      <thead>
+                        <tr className="border-b border-slate-100 text-slate-400 uppercase font-mono text-[9px]">
+                          <th className="py-2">Tx ID</th>
+                          <th className="py-2">Gateway</th>
+                          <th className="py-2">Plan</th>
+                          <th className="py-2 text-right">Amount</th>
+                          <th className="py-2 text-center">Type</th>
+                          <th className="py-2 text-right">Timestamp</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {transactions.map((tx) => (
+                          <tr key={tx.id} className="border-b border-slate-50 hover:bg-slate-50/50">
+                            <td className="py-2.5 font-mono text-slate-500">{tx.id.substring(0, 10)}...</td>
+                            <td className="py-2.5 font-bold uppercase text-slate-700">{tx.gateway}</td>
+                            <td className="py-2.5 text-slate-600 font-medium">{tx.plan}</td>
+                            <td className="py-2.5 text-right font-mono font-bold text-slate-950">${tx.amount.toFixed(2)}</td>
+                            <td className="py-2.5 text-center">
+                              <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
+                                tx.type === 'Simulated' 
+                                  ? 'bg-amber-50 text-amber-600 border border-amber-200' 
+                                  : 'bg-emerald-50 text-emerald-600 border border-emerald-200'
+                              }`}>
+                                {tx.type}
+                              </span>
+                            </td>
+                            <td className="py-2.5 text-right text-slate-400 text-[10px]">{tx.date}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </motion.section>
 
@@ -2567,6 +3168,134 @@ export default function App() {
           </div>
         </div>
       </footer>
+
+      {/* SIMULATED RAZORPAY / CASHFREE CHECKOUT MODAL */}
+      <AnimatePresence>
+        {showSimulatedModal && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-xl shadow-2xl border border-slate-200 max-w-sm w-full overflow-hidden"
+            >
+              <div className={`p-6 text-white ${
+                showSimulatedModal === 'razorpay' ? 'bg-indigo-700' : 'bg-teal-700'
+              } flex items-center justify-between`}>
+                <div>
+                  <h4 className="font-bold text-base font-display">
+                    {showSimulatedModal === 'razorpay' ? 'Razorpay Secure Checkout' : 'Cashfree Payments'}
+                  </h4>
+                  <p className="text-[10px] text-white/80 font-mono mt-0.5">SANDBOX SIMULATION MODE</p>
+                </div>
+                <div className="text-xl font-bold font-mono">
+                  ${simulatedOrderInfo?.amount}
+                </div>
+              </div>
+              
+              <div className="p-6 space-y-4">
+                <div className="space-y-2 text-xs">
+                  <div className="flex justify-between border-b border-slate-100 pb-1.5">
+                    <span className="text-slate-400">Order ID:</span>
+                    <span className="font-mono text-slate-800 font-bold">{simulatedOrderInfo?.orderId}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-slate-100 pb-1.5">
+                    <span className="text-slate-400">Merchant:</span>
+                    <span className="text-slate-800 font-bold">Jaydeep Khunt Portfolio</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Product:</span>
+                    <span className="text-slate-800 font-bold">{simulatedOrderInfo?.planName}</span>
+                  </div>
+                </div>
+
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-700 leading-relaxed font-sans">
+                  <strong>Notice:</strong> No real payment credentials are required. Choose one of the options below to simulate payment outcome.
+                </div>
+
+                <div className="flex gap-2 pt-2">
+                  <button
+                    onClick={() => handleSimulatedPaymentComplete('success')}
+                    className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs uppercase font-mono transition-colors shadow-sm"
+                  >
+                    Simulate Success
+                  </button>
+                  <button
+                    onClick={() => handleSimulatedPaymentComplete('cancel')}
+                    className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold text-xs uppercase font-mono transition-colors"
+                  >
+                    Simulate Cancel
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* PAYMENT RESULT OVERLAY */}
+      <AnimatePresence>
+        {paymentVerified && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-xl shadow-2xl border border-slate-200 max-w-sm w-full p-6 text-center space-y-4"
+            >
+              {paymentVerified === 'processing' && (
+                <div className="space-y-4 py-4">
+                  <div className="w-12 h-12 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin mx-auto" />
+                  <div>
+                    <h4 className="font-bold text-slate-900 text-lg font-display">Verifying Payment Signature...</h4>
+                    <p className="text-slate-500 text-xs font-mono mt-1">CONTACTING CRYPTO GATEWAY</p>
+                  </div>
+                </div>
+              )}
+
+              {paymentVerified === 'success' && (
+                <div className="space-y-4 py-4">
+                  <div className="w-12 h-12 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center text-xl mx-auto">
+                    ✓
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-slate-900 text-lg font-display">Payment Securely Verified!</h4>
+                    <p className="text-slate-500 text-xs mt-1 font-sans">
+                      The transaction hash and status has been updated in the ledger below.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setPaymentVerified(null)}
+                    className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-mono font-bold text-xs uppercase transition-colors"
+                  >
+                    Acknowledge & Close
+                  </button>
+                </div>
+              )}
+
+              {paymentVerified === 'failed' && (
+                <div className="space-y-4 py-4">
+                  <div className="w-12 h-12 rounded-full bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center text-xl mx-auto font-bold">
+                    !
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-slate-900 text-lg font-display">Transaction Unsuccessful</h4>
+                    <p className="text-slate-500 text-xs mt-1 font-sans">
+                      Payment was canceled, expired, or signature verification failed. Refer to logs.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setPaymentVerified(null)}
+                    className="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-mono font-bold text-xs uppercase transition-colors"
+                  >
+                    Close Dialog
+                  </button>
+                </div>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
