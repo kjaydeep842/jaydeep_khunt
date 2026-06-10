@@ -999,377 +999,420 @@ export default function App() {
   // Field validation focus states
   const [focusedField, setFocusedField] = useState(null);
 
-  // Payment Gateway Sandbox States
-  const [paymentForm, setPaymentForm] = useState({
-    name: "John Doe",
-    email: "john.doe@example.com",
-    plan: "Standard Telemetry Cluster",
-    amount: 29.00,
-    gateway: "stripe"
-  });
-  const [paymentLogs, setPaymentLogs] = useState([
-    "PAYMENT GATEWAY ENGINE READY...",
-    "LISTENING FOR INTEGRATION DEPLOYMENT HANDSHAKES..."
+  // Third-Party Integrations Hub States
+  const [activeIntegration, setActiveIntegration] = useState("stripe");
+  const [integrationCategory, setIntegrationCategory] = useState("payments");
+  const [integrationLogs, setIntegrationLogs] = useState([
+    "INTEGRATION TELEMETRY ENGINE ONLINE...",
+    "READY TO SIMULATE THIRD-PARTY API HANDSHAKES."
   ]);
-  const [paymentProcessing, setPaymentProcessing] = useState(false);
-  const [paymentVerified, setPaymentVerified] = useState(null); // 'success', 'failed', 'processing', null
-  const [transactions, setTransactions] = useState(() => {
-    const saved = localStorage.getItem('payment_transactions');
-    return saved ? JSON.parse(saved) : [];
-  });
-  const [showSimulatedModal, setShowSimulatedModal] = useState(null); // 'razorpay', 'cashfree', null
-  const [simulatedOrderInfo, setSimulatedOrderInfo] = useState(null);
+  const [integrationProcessing, setIntegrationProcessing] = useState(false);
 
-  const loadRazorpayScript = () => {
-    return new Promise((resolve) => {
-      const script = document.createElement('script');
-      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-      script.onload = () => resolve(true);
-      script.onerror = () => resolve(false);
-      document.body.appendChild(script);
+  // Playground Forms
+  const [stripeForm, setStripeForm] = useState({ email: "customer@example.com", amount: 49.00, event: "payment_intent.succeeded" });
+  const [paypalForm, setPaypalForm] = useState({ amount: 79.00, clientEmail: "paypal-buyer@example.com" });
+  const [razorpayForm, setRazorpayForm] = useState({ amount: 1500, phone: "9876543210" });
+  const [cashfreeForm, setCashfreeForm] = useState({ name: "Rohan Sharma", vpa: "rohan@okhdfc" });
+  const [whatsappForm, setWhatsappForm] = useState({ phone: "+91 99999 88888", template: "order_confirmation", name: "Jaydeep Khunt" });
+  const [twilioForm, setTwilioForm] = useState({ phone: "+1 555 9823", mode: "send" }); // 'send' or 'verify'
+  const [twilioInputOtp, setTwilioInputOtp] = useState("");
+  const [twilioSentOtp, setTwilioSentOtp] = useState("");
+  const [twilioVerified, setTwilioVerified] = useState(null); // null, true, false
+  const [appointlyForm, setAppointlyForm] = useState({ date: new Date().toISOString().split('T')[0], slot: "02:30 PM", name: "David Miller", email: "david@example.com" });
+  const [googleCalendarForm, setGoogleCalendarForm] = useState({ title: "ERP Architecture Consult", duration: 60 });
+  const [slackForm, setSlackForm] = useState({ message: "Production deployment successful. Status: green. Latency: 42ms.", channel: "#ops-alerts" });
+
+  // Interactive Live Previews States
+  const [whatsappMessages, setWhatsappMessages] = useState([
+    { id: "init_1", text: "Welcome to the WhatsApp API sandbox channel. Output templates will display here.", time: "10:30 AM", sender: "bot" }
+  ]);
+  const [stripeInvoices, setStripeInvoices] = useState([]);
+  const [paypalReceipts, setPaypalReceipts] = useState([]);
+  const [razorpayOrders, setRazorpayOrders] = useState([]);
+  const [cashfreeOrders, setCashfreeOrders] = useState([]);
+  const [appointlyBookings, setAppointlyBookings] = useState([]);
+  const [googleEvents, setGoogleEvents] = useState([]);
+  const [slackFeeds, setSlackFeeds] = useState([
+    { id: "init_slack", channel: "#ops-alerts", message: "System online. Integration webhook monitoring active.", time: "10:30 AM" }
+  ]);
+
+  const simulateIntegrationCall = async (e) => {
+    if (e) e.preventDefault();
+    setIntegrationProcessing(true);
+
+    const log = (msg, delay) => new Promise(resolve => {
+      setTimeout(() => {
+        setIntegrationLogs(prev => [...prev, msg]);
+        resolve();
+      }, delay);
     });
-  };
 
-  // URL Query Parameters Listener for Payment Redirects
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const paymentStatus = params.get('payment');
-    const gateway = params.get('gateway');
-    const plan = params.get('plan');
-    const amount = params.get('amount');
-    const mode = params.get('mode');
+    const timestamp = new Date().toLocaleTimeString();
     
-    if (paymentStatus === 'success' && gateway) {
-      const isSimulated = mode === 'simulation';
+    if (activeIntegration === 'stripe') {
+      const { email, amount, event } = stripeForm;
+      const txId = 'ch_' + Math.random().toString(36).substring(2, 10);
+      const custId = 'cus_' + Math.random().toString(36).substring(2, 10);
       
-      const verifyRedirectPayment = async () => {
-        setPaymentVerified('processing');
-        const logs = [
-          `DETECTED INCOMING SUCCESS REDIRECT FOR GATEWAY [${gateway.toUpperCase()}]`,
-          isSimulated ? `MODE: SIMULATION MODE ACTIVE` : `MODE: LIVE SANDBOX TRANSACTION`,
-          `PLAN: ${plan || 'Custom Plan'}`,
-          `AMOUNT: ${amount || '0.00'}`,
-          `FETCHING SIGNATURE VERIFICATION FROM BACKEND...`
-        ];
-        
-        for (const log of logs) {
-          setPaymentLogs(prev => [...prev, log]);
-          await new Promise(r => setTimeout(r, 300));
-        }
+      setIntegrationLogs([
+        `[${timestamp}] INITIATING STRIPE WEBHOOK DISPATCH SIMULATION...`,
+        `Payload Event Target: ${event}`,
+        `HTTP Method: POST | URL: https://api.jaydeep.dev/api/webhooks/stripe`,
+        `Header: Stripe-Signature: t=${Math.floor(Date.now()/1000)},v1=sig_mock_sha256_...`,
+        `Header: Content-Type: application/json`
+      ]);
 
-        try {
-          const body = {
-            gateway,
-            simulated: isSimulated,
-            planName: plan,
-            amount: amount ? parseFloat(amount) : 0
-          };
+      await log(`>> SERIALIZING TRANSACTION DETAILS FOR ${email}...`, 300);
+      await log(`>> Body: { "id": "${txId}", "object": "event", "type": "${event}", "data": { "object": { "id": "pi_${txId}", "amount": ${amount * 100}, "customer": "${custId}", "receipt_email": "${email}" } } }`, 200);
+      await log(`>> DISPATCHING REQUEST TO BACKEND ROUTE...`, 450);
+      await log(`>> WAITING FOR SERVER RESPONSE...`, 300);
+      
+      setTimeout(async () => {
+        setIntegrationLogs(prev => [
+          ...prev,
+          `<< RESPONSE RECEIVED FROM SERVER: 200 OK (Latency: 142ms)`,
+          `<< Body: { "success": true, "message": "Event processed", "eventId": "evt_${txId}" }`,
+          `==================================================`,
+          `SUCCESS: Stripe webhook parsed. Invoice generated and database records synced.`
+        ]);
+        
+        const newInvoice = {
+          id: 'INV-' + Math.floor(100000 + Math.random() * 900000),
+          email,
+          amount,
+          status: 'PAID',
+          date: new Date().toLocaleTimeString()
+        };
+        setStripeInvoices(prev => [newInvoice, ...prev]);
+        setIntegrationProcessing(false);
+      }, 900);
+    }
+    else if (activeIntegration === 'paypal') {
+      const { amount, clientEmail } = paypalForm;
+      const orderId = 'PAYID-' + Math.random().toString(36).substring(2, 10).toUpperCase();
+      
+      setIntegrationLogs([
+        `[${timestamp}] INITIATING PAYPAL CHECKOUT CAPTURE API...`,
+        `HTTP Method: POST | URL: https://api.sandbox.paypal.com/v2/checkout/orders/${orderId}/capture`,
+        `Header: Authorization: Bearer A21A...mock_token_key`,
+        `Header: Content-Type: application/json`
+      ]);
+
+      await log(`>> SENDING ORDER CAPTURE FOR ORDER_ID: ${orderId}...`, 350);
+      await log(`>> PAYPAL DEPLOYMENT PENDING USER AUTHORIZATION...`, 400);
+      await log(`>> PROCESSOR RESPONSE RECEIVED: 201 Created`, 300);
+      
+      setTimeout(async () => {
+        setIntegrationLogs(prev => [
+          ...prev,
+          `<< RESPONSE RECEIVED FROM SERVER: 200 OK (Latency: 284ms)`,
+          `<< Body: { "id": "${orderId}", "status": "COMPLETED", "payer": { "email_address": "${clientEmail}" }, "purchase_units": [{ "amount": { "currency_code": "USD", "value": "${amount}" } }] }`,
+          `==================================================`,
+          `SUCCESS: PayPal order captured and ledger transaction updated.`
+        ]);
+        
+        const newReceipt = {
+          orderId,
+          email: clientEmail,
+          amount,
+          status: 'COMPLETED',
+          time: new Date().toLocaleTimeString()
+        };
+        setPaypalReceipts(prev => [newReceipt, ...prev]);
+        setIntegrationProcessing(false);
+      }, 900);
+    }
+    else if (activeIntegration === 'razorpay') {
+      const { amount, phone } = razorpayForm;
+      const orderId = 'order_' + Math.random().toString(36).substring(2, 8).toUpperCase();
+      
+      setIntegrationLogs([
+        `[${timestamp}] INITIATING RAZORPAY CUSTOM CHECKOUT LINK GENERATION...`,
+        `HTTP Method: POST | URL: https://api.razorpay.com/v1/payment_links`,
+        `Header: Authorization: Basic rzp_key_id_...`,
+        `Header: Content-Type: application/json`
+      ]);
+
+      await log(`>> Parameters: { "amount": ${amount * 100}, "currency": "INR", "accept_partial": false, "customer": { "contact": "${phone}" } }`, 300);
+      await log(`>> INITIATING SIGNATURE VERIFICATION HANDSHAKE...`, 400);
+      
+      setTimeout(async () => {
+        setIntegrationLogs(prev => [
+          ...prev,
+          `<< RESPONSE RECEIVED FROM SERVER: 200 OK (Latency: 115ms)`,
+          `<< Body: { "id": "plink_${orderId}", "short_url": "https://rzp.io/i/${orderId}", "status": "issued" }`,
+          `==================================================`,
+          `SUCCESS: Razorpay order link generated and webhook setup initialized.`
+        ]);
+        
+        const newOrder = {
+          orderId,
+          phone,
+          amount,
+          url: `https://rzp.io/i/${orderId}`,
+          time: new Date().toLocaleTimeString()
+        };
+        setRazorpayOrders(prev => [newOrder, ...prev]);
+        setIntegrationProcessing(false);
+      }, 800);
+    }
+    else if (activeIntegration === 'cashfree') {
+      const { name, vpa } = cashfreeForm;
+      const orderId = 'CF-' + Date.now().toString().slice(-6);
+      
+      setIntegrationLogs([
+        `[${timestamp}] INITIATING CASHFREE UPI QR INTENT DISPATCH...`,
+        `HTTP Method: POST | URL: https://sandbox.cashfree.com/pg/orders`,
+        `Header: x-api-version: 2023-08-01`,
+        `Header: x-client-id: cf_sandbox_id_...`
+      ]);
+
+      await log(`>> Parameters: { "order_id": "${orderId}", "order_amount": 299.00, "customer_details": { "customer_name": "${name}" } }`, 300);
+      await log(`>> GENERATING TRANSACTION UPI LINK INTENT FOR VPA [${vpa}]...`, 400);
+      
+      setTimeout(async () => {
+        setIntegrationLogs(prev => [
+          ...prev,
+          `<< RESPONSE RECEIVED FROM SERVER: 200 OK (Latency: 180ms)`,
+          `<< Body: { "order_status": "ACTIVE", "cf_order_id": "${orderId}", "payment_session_id": "session_${orderId}" }`,
+          `==================================================`,
+          `SUCCESS: Cashfree UPI transaction order initialized for client verification.`
+        ]);
+        
+        const newOrder = {
+          orderId,
+          name,
+          vpa,
+          amount: 299.00,
+          status: 'ACTIVE',
+          time: new Date().toLocaleTimeString()
+        };
+        setCashfreeOrders(prev => [newOrder, ...prev]);
+        setIntegrationProcessing(false);
+      }, 900);
+    }
+    else if (activeIntegration === 'whatsapp') {
+      const { phone, template, name } = whatsappForm;
+      const messageId = 'wamid.HBgMOTE5' + Math.random().toString(36).substring(2, 12).toUpperCase();
+      
+      setIntegrationLogs([
+        `[${timestamp}] INITIALIZING WHATSAPP BUSINESS CLOUD API DISPATCH...`,
+        `HTTP Method: POST | URL: https://graph.facebook.com/v17.0/10928374928374/messages`,
+        `Header: Authorization: Bearer EAAG...mock_bearer_token`,
+        `Header: Content-Type: application/json`
+      ]);
+
+      await log(`>> Compiling Message Template: [${template}]`, 250);
+      await log(`>> Mapping Variables: { "1": "${name}", "2": "https://jaydeep.dev" }`, 200);
+      await log(`>> Targeting recipient endpoint: ${phone}`, 300);
+      await log(`>> Transmitting raw block payloads to Meta API server...`, 300);
+      
+      setTimeout(async () => {
+        setIntegrationLogs(prev => [
+          ...prev,
+          `<< RESPONSE RECEIVED: 200 OK (Latency: 215ms)`,
+          `<< Body: { "messaging_product": "whatsapp", "contacts": [{ "input": "${phone}", "wa_id": "${phone.replace(/\D/g, '')}" }], "messages": [{ "id": "${messageId}" }] }`,
+          `==================================================`,
+          `SUCCESS: WhatsApp template message dispatched and queued on Meta Business Servers.`
+        ]);
+        
+        const messageText = template === 'order_confirmation' 
+          ? `Hi ${name}! Your order has been confirmed. Track status: https://jaydeep.dev` 
+          : `Hello ${name}. Your verification code is ${Math.floor(100000 + Math.random() * 900000)}. Valid for 10 minutes.`;
           
-          if (gateway === 'stripe') {
-            body.paymentId = params.get('session_id');
-          } else if (gateway === 'paypal') {
-            body.orderId = params.get('token');
-          } else if (gateway === 'cashfree') {
-            body.orderId = params.get('order_id');
-          }
-          
-          const response = await fetch('/api/payments/verify-payment', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body)
-          });
-          
-          const data = await response.json();
-          if (data.success) {
-            setPaymentLogs(prev => [...prev, `SUCCESS: SIGNATURE VERIFIED BY SERVER DEPLOYMENT`, `TRANSACTION COMPLETED & RECORDED`]);
-            setPaymentVerified('success');
-            
-            const newTx = {
-              id: 'TX_' + Date.now(),
-              gateway,
-              plan: plan || 'Demo Node',
-              amount: amount ? parseFloat(amount) : 10.00,
-              date: new Date().toLocaleString(),
-              status: 'Success',
-              type: isSimulated ? 'Simulated' : 'Real Test'
-            };
-            
-            setTransactions(prev => {
-              const updated = [newTx, ...prev];
-              localStorage.setItem('payment_transactions', JSON.stringify(updated));
-              return updated;
-            });
+        const newChat = {
+          id: messageId,
+          text: messageText,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          sender: 'bot'
+        };
+        
+        setWhatsappMessages(prev => [...prev, newChat]);
+        setIntegrationProcessing(false);
+      }, 900);
+    }
+    else if (activeIntegration === 'twilio') {
+      const { phone, mode } = twilioForm;
+      
+      if (mode === 'send') {
+        const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+        setTwilioSentOtp(otpCode);
+        setTwilioVerified(null);
+        setTwilioInputOtp("");
+
+        setIntegrationLogs([
+          `[${timestamp}] INITIATING TWILIO TRANSACTION SMS & OTP PROTOCOL...`,
+          `HTTP Method: POST | URL: https://api.twilio.com/2010-04-01/Accounts/ACmock.../Messages.json`,
+          `Header: Authorization: Basic ACmock_sid_...`
+        ]);
+
+        await log(`>> Parameters: { "To": "${phone}", "From": "+15017122661", "Body": "Your verification code is: ${otpCode}" }`, 300);
+        await log(`>> Queueing SMS on Twilio Telephony Network...`, 400);
+
+        setTimeout(async () => {
+          setIntegrationLogs(prev => [
+            ...prev,
+            `<< RESPONSE RECEIVED: 201 Created (Latency: 156ms)`,
+            `<< Body: { "sid": "SM${Math.random().toString(36).substring(2, 10)}", "status": "queued", "to": "${phone}" }`,
+            `==================================================`,
+            `SUCCESS: OTP sent via Twilio SMS. Input the code to verify.`
+          ]);
+          setTwilioForm(prev => ({ ...prev, mode: 'verify' }));
+          setIntegrationProcessing(false);
+        }, 900);
+      } else {
+        setIntegrationLogs([
+          `[${timestamp}] INITIATING TWILIO OTP VERIFICATION CHECK...`,
+          `HTTP Method: POST | URL: https://api.jaydeep.dev/api/communications/twilio/verify-otp`,
+          `Checking user input [${twilioInputOtp}] against active code...`
+        ]);
+
+        await log(`>> Running validation logic...`, 300);
+
+        setTimeout(async () => {
+          if (twilioInputOtp === twilioSentOtp) {
+            setIntegrationLogs(prev => [
+              ...prev,
+              `<< VERIFICATION MATCH DETECTED (HTTP 200 OK)`,
+              `==================================================`,
+              `SUCCESS: Twilio OTP code matches! Phone number verified successfully.`
+            ]);
+            setTwilioVerified(true);
           } else {
-            throw new Error(data.error || 'Verification failed');
+            setIntegrationLogs(prev => [
+              ...prev,
+              `<< VERIFICATION ERROR: Code mismatch (HTTP 400 Bad Request)`,
+              `==================================================`,
+              `FAILED: OTP verification failed. Correct code was ${twilioSentOtp}.`
+            ]);
+            setTwilioVerified(false);
           }
-        } catch (error) {
-          setPaymentLogs(prev => [...prev, `ERROR: VERIFICATION FAILED - ${error.message}`]);
-          setPaymentVerified('failed');
-        }
-      };
-      
-      verifyRedirectPayment();
-      window.history.replaceState({}, document.title, window.location.pathname);
-    } else if (paymentStatus === 'cancel') {
-      setPaymentLogs(prev => [...prev, `TRANSACTION ABORTED BY USER AT GATEWAY CHECKOUT`]);
-      setPaymentVerified('failed');
-      window.history.replaceState({}, document.title, window.location.pathname);
+          setIntegrationProcessing(false);
+        }, 800);
+      }
     }
-  }, []);
-
-  const handleInitiatePayment = async (e) => {
-    e.preventDefault();
-    if (!paymentForm.name || !paymentForm.email) return;
-    
-    setPaymentProcessing(true);
-    setPaymentLogs(prev => [
-      ...prev,
-      `=========================================`,
-      `INITIATING TELEMETRY TRANSACT COMMAND...`,
-      `CUSTOMER: ${paymentForm.name} <${paymentForm.email}>`,
-      `PRODUCT: ${paymentForm.plan} ($${paymentForm.amount})`,
-      `GATEWAY SELECTED: ${paymentForm.gateway.toUpperCase()}`
-    ]);
-
-    const addLog = (text, delay = 400) => {
-      return new Promise(resolve => {
-        setTimeout(() => {
-          setPaymentLogs(prev => [...prev, text]);
-          resolve();
-        }, delay);
-      });
-    };
-
-    try {
-      await addLog("CONTACTING BACKEND FOR SECURE INTENT CREATION...", 400);
+    else if (activeIntegration === 'appointly') {
+      const { name, email, date, slot } = appointlyForm;
+      const bookingId = 'apt_' + Math.random().toString(36).substring(2, 8);
       
-      if (paymentForm.gateway === 'stripe') {
-        const response = await fetch('/api/payments/create-stripe-session', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            planName: paymentForm.plan,
-            amount: paymentForm.amount,
-            customerEmail: paymentForm.email
-          })
-        });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || 'Server error');
-        
-        await addLog(data.simulated ? "MOCK STRIPE KEY SET. LAUNCHING SIMULATION REDIRECT..." : "STRIPE INTENT VALIDATED. REDIRECTING TO STRIPE CHECKOUT SECURE PAGE...", 500);
-        window.location.href = data.url;
-      } 
-      else if (paymentForm.gateway === 'paypal') {
-        const response = await fetch('/api/payments/create-paypal-order', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            planName: paymentForm.plan,
-            amount: paymentForm.amount
-          })
-        });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || 'Server error');
-        
-        await addLog(data.simulated ? "MOCK PAYPAL CREDENTIALS SET. LAUNCHING SIMULATION REDIRECT..." : "PAYPAL ORDER CREATED. REDIRECTING TO PAYPAL SANDBOX DIALOG...", 500);
-        window.location.href = data.url;
-      }
-      else if (paymentForm.gateway === 'cashfree') {
-        const response = await fetch('/api/payments/create-cashfree-order', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            planName: paymentForm.plan,
-            amount: paymentForm.amount,
-            customerEmail: paymentForm.email,
-            customerName: paymentForm.name,
-            customerPhone: '9999999999'
-          })
-        });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || 'Server error');
+      setIntegrationLogs([
+        `[${timestamp}] CONNECTING APPOINTLY MEETING API...`,
+        `HTTP Method: POST | URL: https://api.appointly.io/v1/appointments`,
+        `Header: Authorization: Bearer apt_token_...`,
+        `Header: Content-Type: application/json`
+      ]);
 
-        if (data.simulated) {
-          await addLog("MOCK CASHFREE CONFIG DETECTED. OPENING SANDBOX TELEMETRY CHECKOUT MODAL...", 500);
-          setSimulatedOrderInfo({
-            gateway: 'cashfree',
-            orderId: data.orderId,
-            planName: paymentForm.plan,
-            amount: paymentForm.amount
-          });
-          setShowSimulatedModal('cashfree');
-        } else {
-          await addLog("CASHFREE ORDER DEPLOYED. OPENING SECURE CHECKOUT PAGE...", 500);
-          window.location.href = `https://sandbox.cashfree.com/pg/view/checkout?session_id=${data.paymentSessionId}`;
-        }
-      }
-      else if (paymentForm.gateway === 'razorpay') {
-        const response = await fetch('/api/payments/create-razorpay-order', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            planName: paymentForm.plan,
-            amount: paymentForm.amount
-          })
-        });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || 'Server error');
+      await log(`>> Parameters: { "name": "${name}", "email": "${email}", "date": "${date}", "slot": "${slot}" }`, 300);
+      await log(`>> CHECKING APPOINTLY SCHEDULER CONFLICT ENGINE...`, 400);
+      await log(`>> GENERATING VIRTUAL MEETING LINKS...`, 300);
 
-        if (data.simulated) {
-          await addLog("MOCK RAZORPAY CONFIG DETECTED. OPENING SANDBOX RAZORPAY POPUP MODAL...", 500);
-          setSimulatedOrderInfo({
-            gateway: 'razorpay',
-            orderId: data.orderId,
-            planName: paymentForm.plan,
-            amount: paymentForm.amount,
-            key: data.key
-          });
-          setShowSimulatedModal('razorpay');
-        } else {
-          await addLog("RAZORPAY ORDER GENERATED. ATTEMPTING CLIENT SDK INITIALIZATION...", 400);
-          const scriptLoaded = await loadRazorpayScript();
-          if (!scriptLoaded) {
-            throw new Error("Failed to load Razorpay SDK. Check connection.");
-          }
-          
-          await addLog("SDK MOUNTED. OPENING RAZORPAY CHECKOUT DIALOG...", 300);
-          
-          const options = {
-            key: data.key,
-            amount: data.amount,
-            currency: data.currency,
-            name: "Jaydeep Khunt Portfolio",
-            description: paymentForm.plan,
-            order_id: data.orderId,
-            handler: async (response) => {
-              await addLog("RAZORPAY TRANSACTION AUTHORIZED BY CUSTOMER...", 400);
-              await addLog("DISPATCHING SIGNATURE VERIFICATION PAYLOAD...", 300);
-              
-              try {
-                const verifyRes = await fetch('/api/payments/verify-payment', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    gateway: 'razorpay',
-                    orderId: data.orderId,
-                    paymentId: response.razorpay_payment_id,
-                    signature: response.razorpay_signature,
-                    simulated: false
-                  })
-                });
-                
-                const verifyData = await verifyRes.json();
-                if (verifyData.success) {
-                  await addLog("SUCCESS: RAZORPAY SIGNATURE CHECK VERIFIED", 300);
-                  setPaymentVerified('success');
-                  
-                  const newTx = {
-                    id: 'TX_' + Date.now(),
-                    gateway: 'razorpay',
-                    plan: paymentForm.plan,
-                    amount: paymentForm.amount,
-                    date: new Date().toLocaleString(),
-                    status: 'Success',
-                    type: 'Real Test'
-                  };
-                  setTransactions(prev => {
-                    const updated = [newTx, ...prev];
-                    localStorage.setItem('payment_transactions', JSON.stringify(updated));
-                    return updated;
-                  });
-                } else {
-                  throw new Error(verifyData.error || "Verification failed");
-                }
-              } catch (err) {
-                await addLog("ERROR: VERIFICATION SYSTEM DENIED SIGNATURE", 300);
-                setPaymentVerified('failed');
-              }
-            },
-            prefill: {
-              name: paymentForm.name,
-              email: paymentForm.email,
-              contact: "9999999999"
-            },
-            theme: { color: "#10b981" }
-          };
-          
-          const rzp = new window.Razorpay(options);
-          rzp.on('payment.failed', async (response) => {
-            await addLog(`ERROR: TRANSACTION DECLINED - ${response.error.description}`, 400);
-            setPaymentVerified('failed');
-          });
-          rzp.open();
-          setPaymentProcessing(false);
-        }
-      }
-    } catch (err) {
-      console.error(err);
-      await addLog(`ERROR: TRANSACTION SYSTEM CRITICAL FAIL - ${err.message}`, 400);
-      setPaymentProcessing(false);
+      setTimeout(async () => {
+        setIntegrationLogs(prev => [
+          ...prev,
+          `<< RESPONSE RECEIVED: 201 Created (Latency: 312ms)`,
+          `<< Body: { "id": "${bookingId}", "status": "confirmed", "meeting_link": "https://meet.google.com/xyz-mock", "booking_time": "${date} ${slot}" }`,
+          `==================================================`,
+          `SUCCESS: Appointly booking created. Synchronizing invite to client & developer calendar.`
+        ]);
+        
+        const newBooking = {
+          id: bookingId,
+          name,
+          email,
+          date,
+          slot,
+          meetUrl: 'https://meet.google.com/xyz-mock',
+          time: new Date().toLocaleTimeString()
+        };
+        setAppointlyBookings(prev => [newBooking, ...prev]);
+        setIntegrationProcessing(false);
+      }, 900);
+    }
+    else if (activeIntegration === 'google_calendar') {
+      const { title, duration } = googleCalendarForm;
+      const eventId = 'ge_' + Math.random().toString(36).substring(2, 12);
+      
+      setIntegrationLogs([
+        `[${timestamp}] SYNCHRONIZING EVENT WITH GOOGLE CALENDAR REST API...`,
+        `HTTP Method: POST | URL: https://www.googleapis.com/calendar/v3/calendars/primary/events`,
+        `Header: Authorization: Bearer OAuth2.0_token_...`,
+        `Header: Content-Type: application/json`
+      ]);
+
+      await log(`>> Refreshing expired OAuth Access Token using Refresh Token...`, 300);
+      await log(`>> Active OAuth Token established. Sending event payload...`, 200);
+      await log(`>> Payload: { "summary": "${title}", "start": { "dateTime": "${timestamp}" }, "end": { "dateTime": "${new Date(Date.now() + duration * 60000).toISOString()}" } }`, 200);
+
+      setTimeout(async () => {
+        setIntegrationLogs(prev => [
+          ...prev,
+          `<< RESPONSE RECEIVED: 200 OK (Latency: 240ms)`,
+          `<< Body: { "kind": "calendar#event", "id": "${eventId}", "htmlLink": "https://calendar.google.com/...", "status": "confirmed" }`,
+          `==================================================`,
+          `SUCCESS: Two-way calendar sync cycle complete. Event scheduled.`
+        ]);
+        
+        const newEvent = {
+          id: eventId,
+          title,
+          duration,
+          date: new Date().toLocaleDateString(),
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        };
+        setGoogleEvents(prev => [newEvent, ...prev]);
+        setIntegrationProcessing(false);
+      }, 900);
+    }
+    else if (activeIntegration === 'slack') {
+      const { message, channel } = slackForm;
+      
+      setIntegrationLogs([
+        `[${timestamp}] DEPLOYING WEBHOOK ALERT PACKET TO SLACK CHANNELS...`,
+        `HTTP Method: POST | URL: https://hooks.slack.com/services/DUMMY_WORKSPACE/DUMMY_CHANNEL/DUMMY_TOKEN`,
+        `Header: Content-Type: application/json`
+      ]);
+
+      await log(`>> Compiling JSON message payload...`, 300);
+      await log(`>> Body: { "channel": "${channel}", "username": "Jaydeep Integration Bot", "text": "${message}" }`, 200);
+
+      setTimeout(async () => {
+        setIntegrationLogs(prev => [
+          ...prev,
+          `<< RESPONSE RECEIVED: 200 OK`,
+          `<< Raw Response Body: "ok"`,
+          `==================================================`,
+          `SUCCESS: Alert successfully routed to Slack Workspace channel [${channel}].`
+        ]);
+        
+        const newMsg = {
+          id: 'slack_' + Date.now(),
+          channel,
+          message,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        };
+        setSlackFeeds(prev => [newMsg, ...prev]);
+        setIntegrationProcessing(false);
+      }, 800);
     }
   };
 
-  const handleSimulatedPaymentComplete = async (status) => {
-    setShowSimulatedModal(null);
-    setPaymentProcessing(true);
-    
-    const addLog = (text, delay = 400) => {
-      return new Promise(resolve => {
-        setTimeout(() => {
-          setPaymentLogs(prev => [...prev, text]);
-          resolve();
-        }, delay);
-      });
-    };
-
-    if (status === 'success') {
-      await addLog("SIMULATED PAYMENT CAPTURE AUTHORIZED...", 400);
-      await addLog("DISPATCHING MOCK SIGNATURE PAYLOAD TO VERIFICATION GATEWAY...", 300);
-      
-      try {
-        const verifyRes = await fetch('/api/payments/verify-payment', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            gateway: simulatedOrderInfo.gateway,
-            orderId: simulatedOrderInfo.orderId,
-            paymentId: 'pay_sim_' + Math.random().toString(36).substring(7),
-            signature: 'sig_sim_' + Math.random().toString(36).substring(7),
-            simulated: true
-          })
-        });
-        
-        const verifyData = await verifyRes.json();
-        if (verifyData.success) {
-          await addLog("SUCCESS: SIMULATED PAYMENT VERIFIED BY SERVER", 300);
-          setPaymentVerified('success');
-          
-          const newTx = {
-            id: 'TX_' + Date.now(),
-            gateway: simulatedOrderInfo.gateway,
-            plan: simulatedOrderInfo.planName,
-            amount: simulatedOrderInfo.amount,
-            date: new Date().toLocaleString(),
-            status: 'Success',
-            type: 'Simulated'
-          };
-          setTransactions(prev => {
-            const updated = [newTx, ...prev];
-            localStorage.setItem('payment_transactions', JSON.stringify(updated));
-            return updated;
-          });
-        } else {
-          throw new Error("Simulated verification failed");
-        }
-      } catch (err) {
-        await addLog("ERROR: VERIFICATION SYSTEM REJECTED MOCK SIGNATURE", 300);
-        setPaymentVerified('failed');
-      }
-    } else {
-      await addLog("SIMULATED TRANSACTION ABORTED BY USER", 300);
-      setPaymentVerified('failed');
+  const handleCategoryChange = (catId) => {
+    setIntegrationCategory(catId);
+    const mockInts = [
+      { id: "stripe", category: "payments" },
+      { id: "paypal", category: "payments" },
+      { id: "razorpay", category: "payments" },
+      { id: "cashfree", category: "payments" },
+      { id: "whatsapp", category: "communications" },
+      { id: "twilio", category: "communications" },
+      { id: "appointly", category: "productivity" },
+      { id: "google_calendar", category: "productivity" },
+      { id: "slack", category: "telemetry" }
+    ];
+    const firstInCat = mockInts.find(i => i.category === catId);
+    if (firstInCat) {
+      setActiveIntegration(firstInCat.id);
     }
-    setPaymentProcessing(false);
   };
   
   const [uptime, setUptime] = useState("99.983%");
@@ -1378,7 +1421,8 @@ export default function App() {
   const [scrollProgress, setScrollProgress] = useState(0);
   const [activeSection, setActiveSection] = useState("about");
   
-  const terminalBottomRef = useRef(null);
+  const terminalScreenRef = useRef(null);
+  const paymentLogsScreenRef = useRef(null);
 
   // Monitor scroll for header background, progress bar, and active nav section
   useEffect(() => {
@@ -1460,10 +1504,17 @@ export default function App() {
 
   // Terminal scroll to bottom
   useEffect(() => {
-    if (terminalBottomRef.current) {
-      terminalBottomRef.current.scrollIntoView({ behavior: 'smooth' });
+    if (terminalScreenRef.current) {
+      terminalScreenRef.current.scrollTop = terminalScreenRef.current.scrollHeight;
     }
   }, [terminalHistory]);
+
+  // Payment logs scroll to bottom
+  useEffect(() => {
+    if (paymentLogsScreenRef.current) {
+      paymentLogsScreenRef.current.scrollTop = paymentLogsScreenRef.current.scrollHeight;
+    }
+  }, [integrationLogs]);
 
   // Statistics random updater
   useEffect(() => {
@@ -2244,37 +2295,85 @@ export default function App() {
               </div>
             </motion.div>
             
-            {/* Flex Wrap Responsive Word Reveal */}
+            {/* Flex Wrap Responsive Character Reveal */}
             <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold font-display leading-tight text-slate-900 tracking-tight flex flex-wrap gap-x-2 gap-y-1 sm:gap-x-3">
-              {titleWords.map((word, idx) => (
-                <motion.span 
-                  key={idx}
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.45, delay: idx * 0.08, ease: "easeOut" }}
-                  className="inline-block text-slate-900"
-                >
-                  {word}
-                </motion.span>
-              ))}
+              {titleWords.map((word, wordIdx) => {
+                const globalWordOffset = titleWords.slice(0, wordIdx).join("").length;
+                return (
+                  <span key={`title-w-${wordIdx}`} className="inline-block whitespace-nowrap">
+                    {Array.from(word).map((char, charIdx) => {
+                      const globalIdx = globalWordOffset + charIdx;
+                      return (
+                        <motion.span 
+                          key={`title-c-${charIdx}`}
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.15, delay: globalIdx * 0.03, ease: "easeOut" }}
+                          className="inline-block text-slate-900"
+                        >
+                          {char}
+                        </motion.span>
+                      );
+                    })}
+                    {wordIdx < titleWords.length - 1 && <span className="inline-block">&nbsp;</span>}
+                  </span>
+                );
+              })}
               <span className="w-full"></span>
-              {subtitleWords.map((word, idx) => (
-                <motion.span 
-                  key={idx}
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.45, delay: (idx + titleWords.length) * 0.08, ease: "easeOut" }}
-                  className="inline-block bg-gradient-to-r from-emerald-600 via-cyan-600 to-amber-600 bg-clip-text text-transparent text-glow-emerald"
-                >
-                  {word}
-                </motion.span>
-              ))}
+              {subtitleWords.map((word, wordIdx) => {
+                const titleTotalChars = titleWords.join("").length;
+                const globalWordOffset = subtitleWords.slice(0, wordIdx).join("").length;
+                return (
+                  <span key={`sub-w-${wordIdx}`} className="inline-block whitespace-nowrap">
+                    {Array.from(word).map((char, charIdx) => {
+                      const globalIdx = titleTotalChars + globalWordOffset + charIdx;
+                      return (
+                        <motion.span 
+                          key={`sub-c-${charIdx}`}
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.15, delay: globalIdx * 0.03, ease: "easeOut" }}
+                          className="inline-block bg-gradient-to-r from-emerald-600 via-cyan-600 to-amber-600 bg-clip-text text-transparent text-glow-emerald"
+                        >
+                          {char}
+                        </motion.span>
+                      );
+                    })}
+                    {wordIdx < subtitleWords.length - 1 && <span className="inline-block">&nbsp;</span>}
+                  </span>
+                );
+              })}
             </h2>
 
             <p className="text-slate-600 text-sm sm:text-base md:text-lg leading-relaxed max-w-2xl">
-              Hello, I am Jaydeep Khunt, a Full Stack Developer & Systems Architect. Graduating with a BCA degree from 
-              Som-Lalit Institute (Ahmedabad), I started my working career in 2023. I architect enterprise ERP management 
-              portals, multi-tenant SaaS structures, and automated AI orchestration modules while actively taking on freelance projects.
+              {(() => {
+                const paragraphText = "Hello, I am Jaydeep Khunt, a Full Stack Developer & Systems Architect. Graduating with a BCA degree from Som-Lalit Institute (Ahmedabad), I started my working career in 2023. I architect enterprise ERP management portals, multi-tenant SaaS structures, and automated AI orchestration modules while actively taking on freelance projects.";
+                const paragraphWords = paragraphText.split(" ");
+                const titleTotalChars = titleWords.join("").length + subtitleWords.join("").length;
+                
+                return paragraphWords.map((word, wordIdx) => {
+                  const globalWordOffset = paragraphWords.slice(0, wordIdx).join("").length;
+                  return (
+                    <span key={`p-w-${wordIdx}`} className="inline-block whitespace-nowrap">
+                      {Array.from(word).map((char, charIdx) => {
+                        const globalIdx = titleTotalChars + globalWordOffset + charIdx;
+                        return (
+                          <motion.span
+                            key={`p-c-${charIdx}`}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ duration: 0.1, delay: globalIdx * 0.005, ease: "easeIn" }}
+                            className="inline"
+                          >
+                            {char}
+                          </motion.span>
+                        );
+                      })}
+                      {wordIdx < paragraphWords.length - 1 && <span className="inline">&nbsp;</span>}
+                    </span>
+                  );
+                });
+              })()}
             </p>
 
             {/* Quick stats grid with Animated counters */}
@@ -2348,7 +2447,7 @@ export default function App() {
               </div>
               
               {/* Terminal screen */}
-              <div className="p-4 sm:p-5 h-[280px] overflow-y-auto font-mono text-[11px] sm:text-xs space-y-3 bg-[#0a0f1d]">
+              <div ref={terminalScreenRef} className="p-4 sm:p-5 h-[280px] overflow-y-auto font-mono text-[11px] sm:text-xs space-y-3 bg-[#0a0f1d]">
                 {terminalHistory.map((item, idx) => (
                   <div key={idx} className={item.type === 'input' ? 'text-white font-semibold' : 'text-emerald-400/90 leading-relaxed whitespace-pre-wrap'}>
                     {item.type === 'input' ? (
@@ -2360,7 +2459,6 @@ export default function App() {
                     )}
                   </div>
                 ))}
-                <div ref={terminalBottomRef} />
               </div>
 
               {/* Terminal Input */}
@@ -2746,220 +2844,717 @@ export default function App() {
           variants={sectionVariants}
           className="space-y-8"
         >
-          <div className="text-center max-w-2xl mx-auto space-y-3">
-            <div className="text-xs font-mono text-emerald-600 uppercase tracking-widest font-bold">Secure Gateway Sandbox</div>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold font-display text-slate-900">Payment Gateways Integration</h2>
-            <p className="text-slate-600 text-sm sm:text-base font-sans">
-              Interactive sandbox simulating checkouts for Stripe, PayPal, Razorpay, and Cashfree. Real test mode works when credentials are added to the environment configuration.
-            </p>
-          </div>
+          {(() => {
+            const categoriesList = [
+              { id: "payments", label: "Payments", desc: "Credit Card, UPI, Webhooks" },
+              { id: "communications", label: "Messaging", desc: "WhatsApp API, SMS" },
+              { id: "productivity", label: "Productivity", desc: "Appointly, Calendars" },
+              { id: "telemetry", label: "Dev Alerts", desc: "Slack, Webhooks" }
+            ];
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            {/* Payment form */}
-            <div className="lg:col-span-5 bg-white border border-slate-200 rounded-xl p-6 shadow-sm space-y-6">
-              <h3 className="text-lg font-bold text-slate-900 font-display flex items-center gap-2 border-b border-slate-100 pb-3">
-                <CreditCard className="text-emerald-600" size={20} />
-                Checkout Terminal
-              </h3>
-              
-              <form onSubmit={handleInitiatePayment} className="space-y-4">
-                {/* Customer Details */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-mono font-bold text-slate-500 uppercase">Customer Name</label>
-                  <input 
-                    type="text" 
-                    value={paymentForm.name}
-                    onChange={(e) => setPaymentForm(prev => ({ ...prev, name: e.target.value }))}
-                    className="w-full px-3.5 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-colors"
-                    placeholder="John Doe"
-                    required
-                  />
+            const integrationsList = [
+              { id: "stripe", name: "Stripe Gateway", category: "payments", status: "Production Certified", icon: CreditCard, desc: "Robust payment processing including credit cards, apple pay, subscription checkouts, and custom webhook-based database sync." },
+              { id: "paypal", name: "PayPal Sandbox", category: "payments", status: "Active API", icon: CreditCard, desc: "Global PayPal SDK implementation with secure order creation, validation handshakes, and capture payouts." },
+              { id: "razorpay", name: "Razorpay (India)", category: "payments", status: "Production Certified", icon: CreditCard, desc: "Indian currency payment gateway integration with custom Razorpay Checkout JS options, signature validation, and payment links." },
+              { id: "cashfree", name: "Cashfree PG", category: "payments", status: "Active API", icon: CreditCard, desc: "Cashfree API implementation with high-availability UPI intent QR codes, payouts, and automated vendor order split." },
+              { id: "whatsapp", name: "WhatsApp Cloud API", category: "communications", status: "Connected", icon: MessageSquare, desc: "Meta cloud gateway integration using template messages, dynamic variables, custom interactive reply buttons, and inbound webhook listener." },
+              { id: "twilio", name: "Twilio SMS", category: "communications", status: "Connected", icon: Smartphone, desc: "Transactional text messaging, custom alert systems, and secure 2-Factor OTP verification services." },
+              { id: "appointly", name: "Appointly API", category: "productivity", status: "Connected", icon: Calendar, desc: "Appointly scheduling portal integration with virtual Google Meet generation, duration check, and slot double-booking block." },
+              { id: "google_calendar", name: "Google Calendar", category: "productivity", status: "OAuth Active", icon: Calendar, desc: "Two-way client calendar event replication using OAuth 2.0 refresh flow, calendar rest updates, and event syncing." },
+              { id: "slack", name: "Slack / Discord", category: "telemetry", status: "Active Webhooks", icon: Zap, desc: "System warning logs, CRM lead capture notices, and payment failure notifications routed to team workspace channels." }
+            ];
+
+            const getIntegrationIcon = (id) => {
+              switch(id) {
+                case 'stripe':
+                case 'paypal':
+                case 'razorpay':
+                case 'cashfree':
+                  return <CreditCard size={18} className="text-emerald-600" />;
+                case 'whatsapp':
+                  return <MessageSquare size={18} className="text-emerald-600" />;
+                case 'twilio':
+                  return <Smartphone size={18} className="text-emerald-600" />;
+                case 'appointly':
+                case 'google_calendar':
+                  return <Calendar size={18} className="text-emerald-600" />;
+                case 'slack':
+                  return <Zap size={18} className="text-emerald-600" />;
+                default:
+                  return <Code size={18} className="text-emerald-600" />;
+              }
+            };
+
+            return (
+              <>
+                <div className="text-center max-w-2xl mx-auto space-y-3">
+                  <div className="text-xs font-mono text-emerald-600 uppercase tracking-widest font-bold">API Ecosystem</div>
+                  <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold font-display text-slate-900">Third-Party & API Integrations</h2>
+                  <p className="text-slate-600 text-sm sm:text-base font-sans">
+                    Explore live, interactive simulations of various payment gateways, messaging APIs, productivity tools, and webhook channels implemented in my applications.
+                  </p>
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-xs font-mono font-bold text-slate-500 uppercase">Customer Email</label>
-                  <input 
-                    type="email" 
-                    value={paymentForm.email}
-                    onChange={(e) => setPaymentForm(prev => ({ ...prev, email: e.target.value }))}
-                    className="w-full px-3.5 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-colors"
-                    placeholder="john.doe@example.com"
-                    required
-                  />
-                </div>
-
-                {/* Plan Selection */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-mono font-bold text-slate-500 uppercase block">Select Target Package</label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[
-                      { name: "Lite Node", amount: 9.00 },
-                      { name: "Standard Cluster", amount: 29.00 },
-                      { name: "Enterprise Reactor", amount: 99.00 }
-                    ].map((p) => (
-                      <button
-                        key={p.name}
-                        type="button"
-                        onClick={() => setPaymentForm(prev => ({ ...prev, plan: p.name, amount: p.amount }))}
-                        className={`p-3 rounded-lg border text-left flex flex-col justify-between transition-all ${
-                          paymentForm.plan === p.name 
-                            ? 'border-emerald-600 bg-emerald-50/40 ring-1 ring-emerald-500' 
-                            : 'border-slate-200 hover:border-slate-300 bg-slate-50/50'
-                        }`}
-                      >
-                        <span className="text-[10px] font-bold font-sans text-slate-700 truncate">{p.name}</span>
-                        <span className="text-sm font-bold text-slate-900 font-mono mt-1">${p.amount}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Gateway Selection */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-mono font-bold text-slate-500 uppercase block">Payment Gateway Provider</label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {[
-                      { id: "stripe", name: "Stripe" },
-                      { id: "paypal", name: "PayPal" },
-                      { id: "razorpay", name: "Razorpay" },
-                      { id: "cashfree", name: "Cashfree" }
-                    ].map((g) => (
-                      <button
-                        key={g.id}
-                        type="button"
-                        onClick={() => setPaymentForm(prev => ({ ...prev, gateway: g.id }))}
-                        className={`p-3 rounded-lg border flex items-center justify-between transition-all ${
-                          paymentForm.gateway === g.id 
-                            ? 'border-emerald-600 bg-emerald-50 ring-1 ring-emerald-500' 
-                            : 'border-slate-200 hover:border-slate-300'
-                        }`}
-                      >
-                        <div className="flex items-center gap-1.5">
-                          <span className={`w-2 h-2 rounded-full ${paymentForm.gateway === g.id ? 'bg-emerald-600' : 'bg-slate-300'}`} />
-                          <span className="text-xs font-bold text-slate-800">{g.name}</span>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Submit button */}
-                <button
-                  type="submit"
-                  disabled={paymentProcessing}
-                  className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-mono font-bold text-xs uppercase tracking-wider transition-all shadow-md shadow-emerald-600/10 flex items-center justify-center gap-2 disabled:bg-slate-300 disabled:cursor-not-allowed"
-                >
-                  {paymentProcessing ? (
-                    <>
-                      <RefreshCw size={14} className="animate-spin" />
-                      Deploying Request...
-                    </>
-                  ) : (
-                    <>
-                      <Play size={12} />
-                      Initiate secure_${paymentForm.gateway}
-                    </>
-                  )}
-                </button>
-              </form>
-            </div>
-
-            {/* Terminal debug logs & Ledger */}
-            <div className="lg:col-span-7 space-y-6">
-              {/* Terminal logs */}
-              <div className="bg-slate-950 rounded-xl border border-slate-800 p-4 font-mono text-xs text-slate-300 shadow-xl relative overflow-hidden flex flex-col h-[280px]">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-2 mb-2 text-[10px] text-slate-500 uppercase tracking-widest font-bold">
-                  <div className="flex items-center gap-1.5">
-                    <Terminal size={14} className="text-emerald-500" />
-                    <span>Secure Gateway Telemetry Feed</span>
-                  </div>
-                  <button 
-                    onClick={() => setPaymentLogs(["PAYMENT GATEWAY ENGINE READY...", "FEED CLEARED."])}
-                    className="hover:text-slate-300 transition-colors"
-                  >
-                    Clear Feed
-                  </button>
-                </div>
-                
-                <div className="flex-1 overflow-y-auto space-y-1 scrollbar-thin scrollbar-thumb-slate-800 scrollbar-track-transparent">
-                  {paymentLogs.map((log, i) => (
-                    <div key={i} className={`leading-relaxed break-all ${
-                      log.startsWith('ERROR:') ? 'text-rose-400 font-bold' : 
-                      log.startsWith('SUCCESS:') ? 'text-emerald-400 font-bold' : 
-                      log.startsWith('======') ? 'text-slate-600' :
-                      log.startsWith('INITIATING') ? 'text-cyan-400 font-bold' :
-                      'text-slate-300'
-                    }`}>
-                      {log.startsWith('======') ? log : `> ${log}`}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+                  {/* Left Column: Category selector and Integration buttons */}
+                  <div className="lg:col-span-4 flex flex-col space-y-6">
+                    {/* Category tabs */}
+                    <div className="bg-slate-100/80 p-1 rounded-xl border border-slate-200 grid grid-cols-2 gap-1">
+                      {categoriesList.map((cat) => (
+                        <button
+                          key={cat.id}
+                          onClick={() => handleCategoryChange(cat.id)}
+                          className={`py-2 px-3 rounded-lg text-center transition-all flex flex-col items-center justify-center ${
+                            integrationCategory === cat.id
+                              ? "bg-white text-emerald-600 shadow-sm border border-slate-200/50"
+                              : "text-slate-600 hover:text-slate-800 hover:bg-slate-200/50"
+                          }`}
+                        >
+                          <span className="text-xs font-bold font-display">{cat.label}</span>
+                          <span className="text-[9px] font-sans text-slate-400 hidden sm:inline">{cat.desc}</span>
+                        </button>
+                      ))}
                     </div>
-                  ))}
-                  <div ref={terminalBottomRef} />
-                </div>
-              </div>
 
-              {/* Transactions Ledger */}
-              <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
-                <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
-                  <h3 className="text-base font-bold text-slate-900 font-display flex items-center gap-2">
-                    <Award size={18} className="text-emerald-600" />
-                    Transaction Ledger
-                  </h3>
-                  {transactions.length > 0 && (
-                    <button 
-                      onClick={() => {
-                        setTransactions([]);
-                        localStorage.removeItem('payment_transactions');
-                      }}
-                      className="text-[10px] font-mono font-bold text-rose-600 hover:text-rose-700 hover:underline uppercase"
-                    >
-                      Purge Ledger
-                    </button>
-                  )}
-                </div>
-
-                {transactions.length === 0 ? (
-                  <div className="text-center py-6 text-slate-400 text-xs font-sans">
-                    No transactions captured. Deploy a secure checkout command above to populate ledger.
+                    {/* Integrations list for selected category */}
+                    <div className="space-y-3 flex-1 overflow-y-auto max-h-[420px] pr-1">
+                      {integrationsList
+                        .filter((item) => item.category === integrationCategory)
+                        .map((item) => {
+                          const isSelected = activeIntegration === item.id;
+                          return (
+                            <button
+                              key={item.id}
+                              onClick={() => setActiveIntegration(item.id)}
+                              className={`w-full text-left p-4 rounded-xl border transition-all flex items-start gap-3.5 ${
+                                isSelected
+                                  ? "border-emerald-600 bg-emerald-50/20 ring-1 ring-emerald-500 shadow-sm"
+                                  : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50"
+                              }`}
+                            >
+                              <div className={`p-2 rounded-lg ${isSelected ? 'bg-emerald-100/50 text-emerald-600' : 'bg-slate-100 text-slate-500'}`}>
+                                {getIntegrationIcon(item.id)}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-sm font-bold text-slate-900 font-display truncate">{item.name}</span>
+                                  <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-mono font-bold ${
+                                    isSelected ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'
+                                  }`}>
+                                    {item.status}
+                                  </span>
+                                </div>
+                                <p className="text-xs text-slate-500 font-sans mt-1 line-clamp-2 leading-relaxed">
+                                  {item.desc}
+                                </p>
+                              </div>
+                            </button>
+                          );
+                        })}
+                    </div>
                   </div>
-                ) : (
-                  <div className="overflow-x-auto border-t border-slate-100 pt-2">
-                    <table className="w-full text-left font-sans text-xs border-collapse">
-                      <thead>
-                        <tr className="border-b border-slate-100 text-slate-400 uppercase font-mono text-[9px]">
-                          <th className="py-2">Tx ID</th>
-                          <th className="py-2">Gateway</th>
-                          <th className="py-2">Plan</th>
-                          <th className="py-2 text-right">Amount</th>
-                          <th className="py-2 text-center">Type</th>
-                          <th className="py-2 text-right">Timestamp</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {transactions.map((tx) => (
-                          <tr key={tx.id} className="border-b border-slate-50 hover:bg-slate-50/50">
-                            <td className="py-2.5 font-mono text-slate-500">{tx.id.substring(0, 10)}...</td>
-                            <td className="py-2.5 font-bold uppercase text-slate-700">{tx.gateway}</td>
-                            <td className="py-2.5 text-slate-600 font-medium">{tx.plan}</td>
-                            <td className="py-2.5 text-right font-mono font-bold text-slate-950">${tx.amount.toFixed(2)}</td>
-                            <td className="py-2.5 text-center">
-                              <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
-                                tx.type === 'Simulated' 
-                                  ? 'bg-amber-50 text-amber-600 border border-amber-200' 
-                                  : 'bg-emerald-50 text-emerald-600 border border-emerald-200'
-                              }`}>
-                                {tx.type}
-                              </span>
-                            </td>
-                            <td className="py-2.5 text-right text-slate-400 text-[10px]">{tx.date}</td>
-                          </tr>
+
+                  {/* Right Column: Playground Panel, Live Preview, and Telemetry Console */}
+                  <div className="lg:col-span-8 flex flex-col space-y-6">
+                    {/* Selected Integration Playground Card */}
+                    <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col md:flex-row gap-6">
+                      
+                      {/* Integration Details & Form */}
+                      <div className="flex-1 space-y-5">
+                        <div>
+                          <h3 className="text-base font-bold text-slate-900 font-display flex items-center gap-2">
+                            {getIntegrationIcon(activeIntegration)}
+                            {integrationsList.find(i => i.id === activeIntegration)?.name}
+                          </h3>
+                          <p className="text-xs text-slate-500 leading-relaxed font-sans mt-1.5">
+                            {integrationsList.find(i => i.id === activeIntegration)?.desc}
+                          </p>
+                        </div>
+
+                        {/* Simulator Forms */}
+                        <form onSubmit={simulateIntegrationCall} className="space-y-4 pt-3 border-t border-slate-100">
+                          
+                          {/* Stripe Form */}
+                          {activeIntegration === 'stripe' && (
+                            <div className="space-y-3">
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] font-mono font-bold text-slate-500 uppercase">Customer Email</label>
+                                <input 
+                                  type="email" 
+                                  value={stripeForm.email}
+                                  onChange={(e) => setStripeForm(prev => ({ ...prev, email: e.target.value }))}
+                                  className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-xs bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                  required
+                                />
+                              </div>
+                              <div className="grid grid-cols-2 gap-3">
+                                <div className="space-y-1.5">
+                                  <label className="text-[10px] font-mono font-bold text-slate-500 uppercase">Amount ($)</label>
+                                  <input 
+                                    type="number" 
+                                    value={stripeForm.amount}
+                                    onChange={(e) => setStripeForm(prev => ({ ...prev, amount: parseFloat(e.target.value) || 0 }))}
+                                    className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-xs bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                    required
+                                  />
+                                </div>
+                                <div className="space-y-1.5">
+                                  <label className="text-[10px] font-mono font-bold text-slate-500 uppercase">Webhook Event Type</label>
+                                  <select 
+                                    value={stripeForm.event}
+                                    onChange={(e) => setStripeForm(prev => ({ ...prev, event: e.target.value }))}
+                                    className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-xs bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                  >
+                                    <option value="payment_intent.succeeded">payment_intent.succeeded</option>
+                                    <option value="customer.subscription.created">subscription.created</option>
+                                    <option value="invoice.payment_failed">invoice.payment_failed</option>
+                                  </select>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* PayPal Form */}
+                          {activeIntegration === 'paypal' && (
+                            <div className="space-y-3">
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] font-mono font-bold text-slate-500 uppercase">Payer PayPal Email</label>
+                                <input 
+                                  type="email" 
+                                  value={paypalForm.clientEmail}
+                                  onChange={(e) => setPaypalForm(prev => ({ ...prev, clientEmail: e.target.value }))}
+                                  className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-xs bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                  required
+                                />
+                              </div>
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] font-mono font-bold text-slate-500 uppercase">Order Amount (USD)</label>
+                                <input 
+                                  type="number" 
+                                  value={paypalForm.amount}
+                                  onChange={(e) => setPaypalForm(prev => ({ ...prev, amount: parseFloat(e.target.value) || 0 }))}
+                                  className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-xs bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                  required
+                                />
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Razorpay Form */}
+                          {activeIntegration === 'razorpay' && (
+                            <div className="space-y-3">
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] font-mono font-bold text-slate-500 uppercase">Customer Phone</label>
+                                <input 
+                                  type="text" 
+                                  value={razorpayForm.phone}
+                                  onChange={(e) => setRazorpayForm(prev => ({ ...prev, phone: e.target.value }))}
+                                  className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-xs bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                  required
+                                />
+                              </div>
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] font-mono font-bold text-slate-500 uppercase">Amount (INR ₹)</label>
+                                <input 
+                                  type="number" 
+                                  value={razorpayForm.amount}
+                                  onChange={(e) => setRazorpayForm(prev => ({ ...prev, amount: parseInt(e.target.value) || 0 }))}
+                                  className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-xs bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                  required
+                                />
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Cashfree Form */}
+                          {activeIntegration === 'cashfree' && (
+                            <div className="space-y-3">
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] font-mono font-bold text-slate-500 uppercase">Customer Name</label>
+                                <input 
+                                  type="text" 
+                                  value={cashfreeForm.name}
+                                  onChange={(e) => setCashfreeForm(prev => ({ ...prev, name: e.target.value }))}
+                                  className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-xs bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                  required
+                                />
+                              </div>
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] font-mono font-bold text-slate-500 uppercase">UPI ID / VPA</label>
+                                <input 
+                                  type="text" 
+                                  value={cashfreeForm.vpa}
+                                  onChange={(e) => setCashfreeForm(prev => ({ ...prev, vpa: e.target.value }))}
+                                  className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-xs bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                  placeholder="username@upi"
+                                  required
+                                />
+                              </div>
+                            </div>
+                          )}
+
+                          {/* WhatsApp Business API Form */}
+                          {activeIntegration === 'whatsapp' && (
+                            <div className="space-y-3">
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] font-mono font-bold text-slate-500 uppercase">Recipient Phone Number</label>
+                                <input 
+                                  type="text" 
+                                  value={whatsappForm.phone}
+                                  onChange={(e) => setWhatsappForm(prev => ({ ...prev, phone: e.target.value }))}
+                                  className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-xs bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                  required
+                                />
+                              </div>
+                              <div className="grid grid-cols-2 gap-3">
+                                <div className="space-y-1.5">
+                                  <label className="text-[10px] font-mono font-bold text-slate-500 uppercase">Template Name</label>
+                                  <select 
+                                    value={whatsappForm.template}
+                                    onChange={(e) => setWhatsappForm(prev => ({ ...prev, template: e.target.value }))}
+                                    className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-xs bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                  >
+                                    <option value="order_confirmation">order_confirmation</option>
+                                    <option value="auth_otp">auth_otp</option>
+                                  </select>
+                                </div>
+                                <div className="space-y-1.5">
+                                  <label className="text-[10px] font-mono font-bold text-slate-500 uppercase">Variable (Name)</label>
+                                  <input 
+                                    type="text" 
+                                    value={whatsappForm.name}
+                                    onChange={(e) => setWhatsappForm(prev => ({ ...prev, name: e.target.value }))}
+                                    className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-xs bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                    required
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Twilio SMS Form */}
+                          {activeIntegration === 'twilio' && (
+                            <div className="space-y-3">
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] font-mono font-bold text-slate-500 uppercase">Phone Number</label>
+                                <input 
+                                  type="text" 
+                                  disabled={twilioForm.mode === 'verify'}
+                                  value={twilioForm.phone}
+                                  onChange={(e) => setTwilioForm(prev => ({ ...prev, phone: e.target.value }))}
+                                  className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-xs bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:bg-slate-100 disabled:text-slate-500"
+                                  required
+                                />
+                              </div>
+                              
+                              {twilioForm.mode === 'verify' && (
+                                <div className="space-y-2 p-3 bg-amber-50/70 rounded-lg border border-amber-200 animate-fade-in">
+                                  <div className="text-[9px] font-mono font-bold text-amber-800">ENTER VERIFICATION CODE SENT TO PHONE:</div>
+                                  <div className="flex gap-2">
+                                    <input 
+                                      type="text"
+                                      maxLength={6}
+                                      value={twilioInputOtp}
+                                      onChange={(e) => setTwilioInputOtp(e.target.value)}
+                                      className="flex-1 px-3 py-1 border border-slate-200 rounded-lg text-xs text-center font-mono font-bold tracking-widest focus:outline-none focus:ring-1 focus:ring-amber-500"
+                                      placeholder="******"
+                                    />
+                                    <button 
+                                      type="button" 
+                                      onClick={() => {
+                                        setTwilioForm(prev => ({ ...prev, mode: 'send' }));
+                                        setTwilioVerified(null);
+                                      }}
+                                      className="px-2.5 py-1 text-[9px] bg-slate-200 hover:bg-slate-300 font-bold rounded-lg transition-colors"
+                                    >
+                                      Edit Phone
+                                    </button>
+                                  </div>
+                                  {twilioVerified === true && <p className="text-[9px] text-emerald-600 font-bold">✓ OTP Verified Successfully!</p>}
+                                  {twilioVerified === false && <p className="text-[9px] text-rose-600 font-bold">✗ Invalid code. Try again (Correct: {twilioSentOtp})</p>}
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Appointly Form */}
+                          {activeIntegration === 'appointly' && (
+                            <div className="space-y-3">
+                              <div className="grid grid-cols-2 gap-3">
+                                <div className="space-y-1.5">
+                                  <label className="text-[10px] font-mono font-bold text-slate-500 uppercase">Booking Date</label>
+                                  <input 
+                                    type="date" 
+                                    value={appointlyForm.date}
+                                    onChange={(e) => setAppointlyForm(prev => ({ ...prev, date: e.target.value }))}
+                                    className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-xs bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                    required
+                                  />
+                                </div>
+                                <div className="space-y-1.5">
+                                  <label className="text-[10px] font-mono font-bold text-slate-500 uppercase">Time Slot</label>
+                                  <select 
+                                    value={appointlyForm.slot}
+                                    onChange={(e) => setAppointlyForm(prev => ({ ...prev, slot: e.target.value }))}
+                                    className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-xs bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                  >
+                                    <option value="09:00 AM">09:00 AM</option>
+                                    <option value="10:30 AM">10:30 AM</option>
+                                    <option value="02:30 PM">02:30 PM</option>
+                                    <option value="04:00 PM">04:00 PM</option>
+                                  </select>
+                                </div>
+                              </div>
+                              <div className="grid grid-cols-2 gap-3">
+                                <div className="space-y-1.5">
+                                  <label className="text-[10px] font-mono font-bold text-slate-500 uppercase">Client Name</label>
+                                  <input 
+                                    type="text" 
+                                    value={appointlyForm.name}
+                                    onChange={(e) => setAppointlyForm(prev => ({ ...prev, name: e.target.value }))}
+                                    className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-xs bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                    required
+                                  />
+                                </div>
+                                <div className="space-y-1.5">
+                                  <label className="text-[10px] font-mono font-bold text-slate-500 uppercase">Client Email</label>
+                                  <input 
+                                    type="email" 
+                                    value={appointlyForm.email}
+                                    onChange={(e) => setAppointlyForm(prev => ({ ...prev, email: e.target.value }))}
+                                    className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-xs bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                    required
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Google Calendar Form */}
+                          {activeIntegration === 'google_calendar' && (
+                            <div className="space-y-3">
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] font-mono font-bold text-slate-500 uppercase">Calendar Event Title</label>
+                                <input 
+                                  type="text" 
+                                  value={googleCalendarForm.title}
+                                  onChange={(e) => setGoogleCalendarForm(prev => ({ ...prev, title: e.target.value }))}
+                                  className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-xs bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                  required
+                                />
+                              </div>
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] font-mono font-bold text-slate-500 uppercase">Duration (Minutes)</label>
+                                <select 
+                                  value={googleCalendarForm.duration}
+                                  onChange={(e) => setGoogleCalendarForm(prev => ({ ...prev, duration: parseInt(e.target.value) || 30 }))}
+                                  className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-xs bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                >
+                                  <option value="30">30 Minutes</option>
+                                  <option value="60">1 Hour</option>
+                                  <option value="90">1.5 Hours</option>
+                                </select>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Slack Form */}
+                          {activeIntegration === 'slack' && (
+                            <div className="space-y-3">
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] font-mono font-bold text-slate-500 uppercase">Target Slack Channel</label>
+                                <select 
+                                  value={slackForm.channel}
+                                  onChange={(e) => setSlackForm(prev => ({ ...prev, channel: e.target.value }))}
+                                  className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-xs bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                >
+                                  <option value="#ops-alerts">#ops-alerts</option>
+                                  <option value="#crm-leads">#crm-leads</option>
+                                  <option value="#general">#general</option>
+                                </select>
+                              </div>
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] font-mono font-bold text-slate-500 uppercase">Telemetry Message Payload</label>
+                                <textarea 
+                                  value={slackForm.message}
+                                  onChange={(e) => setSlackForm(prev => ({ ...prev, message: e.target.value }))}
+                                  className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-xs bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500 h-16 font-sans resize-none"
+                                  required
+                                />
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Execute Simulator Button */}
+                          <button
+                            type="submit"
+                            disabled={integrationProcessing}
+                            className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-mono font-bold text-xs uppercase tracking-wider transition-all shadow-md shadow-emerald-600/10 flex items-center justify-center gap-2 disabled:bg-slate-300 disabled:cursor-not-allowed mt-2"
+                          >
+                            {integrationProcessing ? (
+                              <>
+                                <RefreshCw size={12} className="animate-spin" />
+                                Processing Simulation...
+                              </>
+                            ) : (
+                              <>
+                                <Play size={10} />
+                                {activeIntegration === 'twilio' && twilioForm.mode === 'verify' ? "Verify OTP Code" : `Trigger ${activeIntegration} API`}
+                              </>
+                            )}
+                          </button>
+                        </form>
+                      </div>
+
+                      {/* Right / Live Visual Output Preview */}
+                      <div className="w-full md:w-[240px] bg-slate-50 border border-slate-100 rounded-xl p-4 flex flex-col justify-between min-h-[280px]">
+                        <div className="w-full h-full flex flex-col justify-start">
+                          <span className="text-[9px] font-mono font-bold text-slate-400 uppercase tracking-wider block border-b border-slate-200/60 pb-1.5 mb-3">
+                            Live Preview Window
+                          </span>
+
+                          {/* WhatsApp Live Preview */}
+                          {activeIntegration === 'whatsapp' && (
+                            <div className="flex-1 flex flex-col justify-between bg-[#efeae2] border border-slate-200 rounded-lg p-2 font-sans overflow-hidden max-h-[220px]">
+                              {/* Mobile chat screen */}
+                              <div className="flex-1 overflow-y-auto space-y-2 pr-1 text-[9px] scrollbar-thin">
+                                {whatsappMessages.map((msg) => (
+                                  <div 
+                                    key={msg.id}
+                                    className={`p-2 rounded-lg max-w-[85%] leading-relaxed ${
+                                      msg.sender === 'bot' 
+                                        ? 'bg-white ml-auto text-slate-800 rounded-tr-none shadow-xs' 
+                                        : 'bg-emerald-100 text-slate-800 shadow-xs'
+                                    }`}
+                                  >
+                                    <p className="break-words">{msg.text}</p>
+                                    <span className="text-[7px] text-slate-400 block text-right mt-0.5">{msg.time}</span>
+                                  </div>
+                                ))}
+                              </div>
+                              <div className="bg-white p-1 rounded-full border border-slate-200 text-[8px] text-slate-400 pl-2 mt-2">
+                                Type a message...
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Twilio SMS Live Preview */}
+                          {activeIntegration === 'twilio' && (
+                            <div className="flex-1 flex flex-col justify-center items-center p-4 bg-slate-900 text-white rounded-lg border border-slate-800 text-center font-sans space-y-3 max-h-[220px]">
+                              <Smartphone size={24} className="text-emerald-400" />
+                              <div className="space-y-1">
+                                <h4 className="font-bold text-[11px]">Twilio SMS Hub</h4>
+                                <p className="text-[9px] text-slate-400 leading-normal">
+                                  {twilioForm.mode === 'send' 
+                                    ? "Awaiting trigger code dispatch."
+                                    : "SMS queued on node gateway. Verification active."}
+                                </p>
+                              </div>
+                              {twilioForm.mode === 'verify' && (
+                                <div className="bg-slate-800 px-2.5 py-1 rounded-lg border border-slate-700 font-mono text-emerald-400 font-bold text-[11px] tracking-wider">
+                                  OTP: {twilioSentOtp}
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Stripe Live Preview */}
+                          {activeIntegration === 'stripe' && (
+                            <div className="flex-1 overflow-y-auto space-y-2 max-h-[220px] pr-1 scrollbar-thin">
+                              {stripeInvoices.length === 0 ? (
+                                <div className="text-center py-10 text-[9px] text-slate-400 font-sans">
+                                  No simulated invoices. Trigger a Stripe webhook.
+                                </div>
+                              ) : (
+                                stripeInvoices.map((inv, idx) => (
+                                  <div key={idx} className="bg-white border border-slate-200 rounded-lg p-2.5 shadow-xs text-[9px] font-sans space-y-1 animate-fade-in">
+                                    <div className="flex items-center justify-between font-bold">
+                                      <span className="text-slate-800">{inv.id}</span>
+                                      <span className="text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full text-[7px]">{inv.status}</span>
+                                    </div>
+                                    <div className="text-slate-500 truncate">{inv.email}</div>
+                                    <div className="border-t border-slate-100 mt-1 pt-1 flex items-center justify-between font-bold text-slate-900">
+                                      <span>Total Paid</span>
+                                      <span>${inv.amount.toFixed(2)}</span>
+                                    </div>
+                                  </div>
+                                ))
+                              )}
+                            </div>
+                          )}
+
+                          {/* PayPal Live Preview */}
+                          {activeIntegration === 'paypal' && (
+                            <div className="flex-1 overflow-y-auto space-y-2 max-h-[220px] pr-1 scrollbar-thin">
+                              {paypalReceipts.length === 0 ? (
+                                <div className="text-center py-10 text-[9px] text-slate-400 font-sans">
+                                  No receipts. Run a simulated PayPal order.
+                                </div>
+                              ) : (
+                                paypalReceipts.map((rec, idx) => (
+                                  <div key={idx} className="bg-[#003087]/5 border border-[#003087]/10 rounded-lg p-2.5 text-[9px] font-sans space-y-1 animate-fade-in">
+                                    <div className="flex items-center justify-between font-bold">
+                                      <span className="text-[#003087]">PayPal Receipt</span>
+                                      <span className="text-blue-600 bg-blue-50 px-1 rounded-full text-[7px] font-mono">{rec.status}</span>
+                                    </div>
+                                    <div className="text-slate-500 font-mono truncate">{rec.orderId}</div>
+                                    <div className="border-t border-slate-200/50 mt-1 pt-1 flex items-center justify-between font-bold text-slate-950">
+                                      <span>Captured</span>
+                                      <span>${rec.amount.toFixed(2)} USD</span>
+                                    </div>
+                                  </div>
+                                ))
+                              )}
+                            </div>
+                          )}
+
+                          {/* Razorpay Live Preview */}
+                          {activeIntegration === 'razorpay' && (
+                            <div className="flex-1 overflow-y-auto space-y-2 max-h-[220px] pr-1 scrollbar-thin">
+                              {razorpayOrders.length === 0 ? (
+                                <div className="text-center py-10 text-[9px] text-slate-400 font-sans">
+                                  No links generated. Run a simulated order.
+                                </div>
+                              ) : (
+                                razorpayOrders.map((ord, idx) => (
+                                  <div key={idx} className="bg-white border border-slate-200 rounded-lg p-2.5 text-[9px] font-sans space-y-1.5 animate-fade-in">
+                                    <div className="font-bold text-slate-800">plink_{ord.orderId}</div>
+                                    <div className="text-slate-500">To: {ord.phone}</div>
+                                    <div className="font-bold text-slate-950">₹{ord.amount} INR</div>
+                                    <a 
+                                      href={ord.url} 
+                                      target="_blank" 
+                                      rel="noreferrer" 
+                                      className="block text-center py-1 bg-cyan-600 hover:bg-cyan-700 text-white font-bold rounded transition-colors text-[8px]"
+                                    >
+                                      Payment Link (Simulated)
+                                    </a>
+                                  </div>
+                                ))
+                              )}
+                            </div>
+                          )}
+
+                          {/* Cashfree Live Preview */}
+                          {activeIntegration === 'cashfree' && (
+                            <div className="flex-1 overflow-y-auto space-y-2 max-h-[220px] pr-1 scrollbar-thin">
+                              {cashfreeOrders.length === 0 ? (
+                                <div className="text-center py-10 text-[9px] text-slate-400 font-sans">
+                                  No UPI QR intents created.
+                                </div>
+                              ) : (
+                                cashfreeOrders.map((ord, idx) => (
+                                  <div key={idx} className="bg-white border border-slate-200 rounded-lg p-2.5 text-[9px] font-sans space-y-1 animate-fade-in">
+                                    <div className="flex justify-between items-center font-bold text-slate-800">
+                                      <span>{ord.orderId}</span>
+                                      <span className="px-1 text-[7px] bg-amber-50 text-amber-700 border border-amber-200 rounded-full">{ord.status}</span>
+                                    </div>
+                                    <div className="text-slate-500 font-mono truncate">{ord.vpa}</div>
+                                    <div className="text-right font-bold text-slate-950 mt-1">₹{ord.amount.toFixed(2)}</div>
+                                  </div>
+                                ))
+                              )}
+                            </div>
+                          )}
+
+                          {/* Appointly Live Preview */}
+                          {activeIntegration === 'appointly' && (
+                            <div className="flex-1 overflow-y-auto space-y-2 max-h-[220px] pr-1 scrollbar-thin">
+                              {appointlyBookings.length === 0 ? (
+                                <div className="text-center py-10 text-[9px] text-slate-400 font-sans">
+                                  No bookings scheduled.
+                                </div>
+                              ) : (
+                                appointlyBookings.map((bk, idx) => (
+                                  <div key={idx} className="bg-white border border-slate-200 rounded-lg p-2.5 text-[9px] font-sans space-y-1 animate-fade-in shadow-xs">
+                                    <div className="flex justify-between items-center font-bold text-slate-900">
+                                      <span>Meeting Confirmed</span>
+                                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                    </div>
+                                    <div className="text-slate-600 truncate">{bk.name}</div>
+                                    <div className="text-emerald-700 font-mono text-[8px] bg-emerald-50 p-1 rounded">
+                                      {bk.date} @ {bk.slot}
+                                    </div>
+                                  </div>
+                                ))
+                              )}
+                            </div>
+                          )}
+
+                          {/* Google Calendar Live Preview */}
+                          {activeIntegration === 'google_calendar' && (
+                            <div className="flex-1 overflow-y-auto space-y-2 max-h-[220px] pr-1 scrollbar-thin">
+                              {googleEvents.length === 0 ? (
+                                <div className="text-center py-10 text-[9px] text-slate-400 font-sans">
+                                  No synced events.
+                                </div>
+                              ) : (
+                                googleEvents.map((ev, idx) => (
+                                  <div key={idx} className="bg-white border-l-2 border-l-blue-600 border border-slate-200 rounded-r-lg p-2 text-[9px] font-sans space-y-1 animate-fade-in">
+                                    <div className="font-bold text-slate-900">{ev.title}</div>
+                                    <div className="text-slate-500">{ev.duration} mins | {ev.date}</div>
+                                  </div>
+                                ))
+                              )}
+                            </div>
+                          )}
+
+                          {/* Slack Webhooks Live Preview */}
+                          {activeIntegration === 'slack' && (
+                            <div className="flex-1 flex flex-col justify-between bg-slate-900 border border-slate-800 rounded-lg p-2 font-sans max-h-[220px] text-slate-300">
+                              {/* Slack message screen mockup */}
+                              <div className="flex-1 overflow-y-auto space-y-1.5 text-[8px] scrollbar-thin">
+                                {slackFeeds.map((feed) => (
+                                  <div key={feed.id} className="space-y-0.5 border-b border-slate-800 pb-1 animate-fade-in">
+                                    <div className="flex items-center gap-1">
+                                      <span className="font-bold text-white">Slack Bot</span>
+                                      <span className="text-slate-500">{feed.time}</span>
+                                    </div>
+                                    <p className="text-slate-300 leading-normal font-sans text-[8px]">{feed.message}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                    </div>
+
+                    {/* Terminal Logs for Integrations */}
+                    <div className="bg-slate-950 rounded-xl border border-slate-800 p-4 font-mono text-xs text-slate-300 shadow-xl relative overflow-hidden flex flex-col h-[240px]">
+                      <div className="flex items-center justify-between border-b border-slate-800 pb-2 mb-2 text-[10px] text-slate-500 uppercase tracking-widest font-bold">
+                        <div className="flex items-center gap-1.5">
+                          <Terminal size={14} className="text-emerald-500" />
+                          <span>Integration Telemetry console</span>
+                        </div>
+                        <button 
+                          onClick={() => setIntegrationLogs(["INTEGRATION TELEMETRY ENGINE ONLINE...", "FEED CLEARED."])}
+                          className="hover:text-slate-300 transition-colors text-[9px]"
+                        >
+                          Clear Feed
+                        </button>
+                      </div>
+                      
+                      <div ref={paymentLogsScreenRef} className="flex-1 overflow-y-auto space-y-1 scrollbar-thin scrollbar-thumb-slate-800 scrollbar-track-transparent">
+                        {integrationLogs.map((log, i) => (
+                          <div key={i} className={`leading-relaxed break-all ${
+                            log.startsWith('ERROR:') || log.startsWith('FAILED:') ? 'text-rose-400 font-bold' : 
+                            log.startsWith('SUCCESS:') ? 'text-emerald-400 font-bold' : 
+                            log.startsWith('======') ? 'text-slate-600' :
+                            log.startsWith('INITIATING') || log.startsWith('[') ? 'text-cyan-400 font-bold' :
+                            'text-slate-300'
+                          }`}>
+                            {log.startsWith('======') ? log : `> ${log}`}
+                          </div>
                         ))}
-                      </tbody>
-                    </table>
+                      </div>
+                    </div>
                   </div>
-                )}
-              </div>
-            </div>
-          </div>
+                </div>
+              </>
+            );
+          })()}
         </motion.section>
 
         {/* NEW FAQ SECTION */}
@@ -3169,133 +3764,7 @@ export default function App() {
         </div>
       </footer>
 
-      {/* SIMULATED RAZORPAY / CASHFREE CHECKOUT MODAL */}
-      <AnimatePresence>
-        {showSimulatedModal && (
-          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-xl shadow-2xl border border-slate-200 max-w-sm w-full overflow-hidden"
-            >
-              <div className={`p-6 text-white ${
-                showSimulatedModal === 'razorpay' ? 'bg-indigo-700' : 'bg-teal-700'
-              } flex items-center justify-between`}>
-                <div>
-                  <h4 className="font-bold text-base font-display">
-                    {showSimulatedModal === 'razorpay' ? 'Razorpay Secure Checkout' : 'Cashfree Payments'}
-                  </h4>
-                  <p className="text-[10px] text-white/80 font-mono mt-0.5">SANDBOX SIMULATION MODE</p>
-                </div>
-                <div className="text-xl font-bold font-mono">
-                  ${simulatedOrderInfo?.amount}
-                </div>
-              </div>
-              
-              <div className="p-6 space-y-4">
-                <div className="space-y-2 text-xs">
-                  <div className="flex justify-between border-b border-slate-100 pb-1.5">
-                    <span className="text-slate-400">Order ID:</span>
-                    <span className="font-mono text-slate-800 font-bold">{simulatedOrderInfo?.orderId}</span>
-                  </div>
-                  <div className="flex justify-between border-b border-slate-100 pb-1.5">
-                    <span className="text-slate-400">Merchant:</span>
-                    <span className="text-slate-800 font-bold">Jaydeep Khunt Portfolio</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">Product:</span>
-                    <span className="text-slate-800 font-bold">{simulatedOrderInfo?.planName}</span>
-                  </div>
-                </div>
-
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-700 leading-relaxed font-sans">
-                  <strong>Notice:</strong> No real payment credentials are required. Choose one of the options below to simulate payment outcome.
-                </div>
-
-                <div className="flex gap-2 pt-2">
-                  <button
-                    onClick={() => handleSimulatedPaymentComplete('success')}
-                    className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs uppercase font-mono transition-colors shadow-sm"
-                  >
-                    Simulate Success
-                  </button>
-                  <button
-                    onClick={() => handleSimulatedPaymentComplete('cancel')}
-                    className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold text-xs uppercase font-mono transition-colors"
-                  >
-                    Simulate Cancel
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* PAYMENT RESULT OVERLAY */}
-      <AnimatePresence>
-        {paymentVerified && (
-          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-xl shadow-2xl border border-slate-200 max-w-sm w-full p-6 text-center space-y-4"
-            >
-              {paymentVerified === 'processing' && (
-                <div className="space-y-4 py-4">
-                  <div className="w-12 h-12 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin mx-auto" />
-                  <div>
-                    <h4 className="font-bold text-slate-900 text-lg font-display">Verifying Payment Signature...</h4>
-                    <p className="text-slate-500 text-xs font-mono mt-1">CONTACTING CRYPTO GATEWAY</p>
-                  </div>
-                </div>
-              )}
-
-              {paymentVerified === 'success' && (
-                <div className="space-y-4 py-4">
-                  <div className="w-12 h-12 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center text-xl mx-auto">
-                    ✓
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-slate-900 text-lg font-display">Payment Securely Verified!</h4>
-                    <p className="text-slate-500 text-xs mt-1 font-sans">
-                      The transaction hash and status has been updated in the ledger below.
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => setPaymentVerified(null)}
-                    className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-mono font-bold text-xs uppercase transition-colors"
-                  >
-                    Acknowledge & Close
-                  </button>
-                </div>
-              )}
-
-              {paymentVerified === 'failed' && (
-                <div className="space-y-4 py-4">
-                  <div className="w-12 h-12 rounded-full bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center text-xl mx-auto font-bold">
-                    !
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-slate-900 text-lg font-display">Transaction Unsuccessful</h4>
-                    <p className="text-slate-500 text-xs mt-1 font-sans">
-                      Payment was canceled, expired, or signature verification failed. Refer to logs.
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => setPaymentVerified(null)}
-                    className="w-full py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-mono font-bold text-xs uppercase transition-colors"
-                  >
-                    Close Dialog
-                  </button>
-                </div>
-              )}
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+      {/* Checkout modals removed */}
     </div>
   )
 }
