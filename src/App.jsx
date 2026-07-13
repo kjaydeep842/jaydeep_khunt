@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence, useScroll, useTransform, useSpring } from 'framer-motion'
 import Lenis from 'lenis'
+import PremiumPortfolio from './PremiumPortfolio'
 import { 
   Terminal, Terminal as TerminalIcon, Code, Server, Database, Brain, Cpu, Smartphone, 
   Layout, Layers, ExternalLink, Activity, Send, Award, Calendar, 
@@ -352,6 +353,33 @@ const ScrollDrawLines = () => {
 
 // Projects database
 const projects = [
+  {
+    id: "visaconsultant",
+    title: "VisaConsultant CRM",
+    subtitle: "Immigration & Visa Management Portal",
+    tech: ["Laravel (PHP)", "MySQL", "Tailwind CSS", "Blade UI"],
+    desc: "A comprehensive Visa and Immigration Consultant CRM. Features robust client profile management, secure document uploading and tracking, structured application status workflows, and appointment scheduling to streamline the entire visa consultation process.",
+    metric: "Streamlines document tracking & client onboarding",
+    role: "Lead Full-Stack Developer",
+    github: "https://github.com/kjaydeep842/VisaConsultant",
+    snippet: `// Client document validation and upload
+public function uploadDocument(Request $request, Client $client)
+{
+    $validated = $request->validate([
+        'document' => 'required|file|mimes:pdf,jpg,png|max:5120',
+        'type' => 'required|string'
+    ]);
+    $path = $request->file('document')->store('client_documents');
+    $client->documents()->create(['path' => $path, 'type' => $validated['type']]);
+    return redirect()->back()->with('success', 'Document uploaded.');
+}`,
+    architecture: {
+      client: "Blade Admin & User Portal",
+      api: "Laravel MVC Controllers",
+      jobs: "Queue Notification Dispatchers",
+      db: "Relational MySQL database"
+    }
+  },
   {
     id: "commerceinstitute",
     title: "The Commerce Institute",
@@ -793,6 +821,37 @@ const cardChildVariants = {
 // Simulated visual preview mockup component inside card inspector
 const ProjectMockup = ({ projectId }) => {
   switch (projectId) {
+    case "visaconsultant":
+      return (
+        <div className="h-full w-full bg-slate-900 rounded-lg p-3 flex flex-col font-mono text-[9px] text-slate-300">
+          <div className="flex items-center justify-between border-b border-slate-800 pb-2 mb-2">
+            <span className="text-blue-400 font-bold">🌍 VISACONSULTANT_CRM v2.0</span>
+            <span className="bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded text-[8px] uppercase">Online</span>
+          </div>
+          <div className="grid grid-cols-3 gap-2 mb-2">
+            <div className="bg-slate-950 p-1.5 rounded border border-slate-800">
+              <div className="text-slate-500 text-[7px]">ACTIVE APPLICANTS</div>
+              <div className="font-bold text-[10px] text-white">342 Tracked</div>
+            </div>
+            <div className="bg-slate-950 p-1.5 rounded border border-slate-800">
+              <div className="text-slate-500 text-[7px]">PENDING DOCS</div>
+              <div className="font-bold text-[10px] text-yellow-400">14 Awaiting</div>
+            </div>
+            <div className="bg-slate-950 p-1.5 rounded border border-slate-800">
+              <div className="text-slate-500 text-[7px]">APPROVAL RATE</div>
+              <div className="font-bold text-[10px] text-emerald-400">92.4%</div>
+            </div>
+          </div>
+          <div className="flex-1 bg-slate-950 rounded p-2 border border-slate-800 flex flex-col gap-1 overflow-y-auto">
+            <span className="text-slate-500 text-[8px]">APPLICATION EVENT LOG:</span>
+            <div className="text-blue-400/90 leading-tight select-none">
+              • ID #892 Passport PDF uploaded by John Doe<br />
+              • ID #893 Visa Status updated to: "In Embassy"<br />
+              • ID #894 Appointment Scheduled for 24th Oct
+            </div>
+          </div>
+        </div>
+      );
     case "commerceinstitute":
       return (
         <div className="h-full w-full bg-slate-900 rounded-lg p-3 flex flex-col font-mono text-[9px] text-slate-300">
@@ -917,9 +976,9 @@ const Marquee = () => {
   );
 };
 
-// Helper function to return icon based on project id
 const getProjectIcon = (id) => {
   switch(id) {
+    case "visaconsultant": return <Globe className="text-blue-500" size={20} />;
     case "commerceinstitute": return <GraduationCap className="text-emerald-500" size={20} />;
     case "omnipos": return <Monitor className="text-cyan-500" size={20} />;
     case "aosai": return <Brain className="text-purple-500" size={20} />;
@@ -1460,6 +1519,9 @@ export default function App() {
       if (hash === "#admin") {
         setCurrentView("admin");
         window.scrollTo(0, 0);
+      } else if (hash === "#premium") {
+        setCurrentView("premium");
+        window.scrollTo(0, 0);
       } else if (hash.startsWith("#project-")) {
         const id = hash.replace("#project-", "");
         setDetailProjectId(id);
@@ -1861,6 +1923,20 @@ export default function App() {
           </div>
         </div>
       </div>
+    );
+  }
+
+  // RENDER PREMIUM PORTFOLIO VIEW
+  if (currentView === "premium") {
+    return (
+      <PremiumPortfolio 
+        projects={allProjects} 
+        timeline={allTimeline} 
+        onBack={() => {
+          setCurrentView("portfolio");
+          window.location.hash = "";
+        }} 
+      />
     );
   }
 
@@ -3758,6 +3834,7 @@ export default function App() {
           <p>© {new Date().getFullYear()} Jaydeep Khunt. Transmitted securely from Workspace Dev-1.</p>
           <div className="flex gap-6">
             <a href="#admin" className="text-slate-400 hover:text-emerald-600 transition-colors flex items-center gap-1"><Settings size={12} /> admin</a>
+            <a href="#premium" className="text-slate-400 hover:text-[#adc6ff] transition-colors flex items-center gap-1"><Sparkles size={12} /> premium mode</a>
             <a href="https://github.com/kjaydeep842" target="_blank" rel="noopener noreferrer" className="hover:text-emerald-600 transition-colors">github</a>
             <a href="#about" className="hover:text-emerald-600 transition-colors">top</a>
           </div>
